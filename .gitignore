@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+tesseract/
+.claude/
+bot/bot_calibration.json
+debug_price_processed.png
+*.lnk
+logo.ico

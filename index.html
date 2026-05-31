@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Albion Reaper</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+window.FORGESCOPE_SUPABASE_URL = "https://huhpjepvqfkuezxmxnuw.supabase.co";
+window.FORGESCOPE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1aHBqZXB2cWZrdWV6eG14bnV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMTE5MzUsImV4cCI6MjA5NDY4NzkzNX0.ql9Zzbrj4ohh_jsrt1KHxP5XK8_SEMyMW3XGNx4WtvQ";
+</script>
+<style>
+:root {
+  --bg:       #0d1117;
+  --surface:  #161b22;
+  --border:   #21262d;
+  --gold:     #d4a017;
+  --bronze:   #a0522d;
+  --text:     #e6edf3;
+  --muted:    #7d8590;
+  --green:    #3fb950;
+  --red:      #f85149;
+  --blue:     #4f8cff;
+  --radius:   8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  min-height: 100vh;
+}
+
+/* ── Auth ── */
+.auth-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  z-index: 9999;
+  background: linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.6)), url('bg-login.png') center/cover no-repeat;
+}
+.auth-screen.active { display: flex; }
+.auth-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.auth-card input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 10px 14px;
+  font-size: 14px;
+  width: 100%;
+}
+.auth-card button {
+  background: linear-gradient(135deg, var(--gold), var(--bronze));
+  border: none;
+  border-radius: var(--radius);
+  color: #130e05;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px;
+  width: 100%;
+}
+.auth-message { color: var(--red); font-size: 13px; min-height: 18px; }
+.auth-debug   { color: var(--muted); font-size: 12px; }
+
+/* ── App shell ── */
+.app-shell { display: none; }
+.app-shell.visible { display: block; }
+
+.app-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.brand { font-size: 18px; font-weight: 700; color: var(--gold); }
+
+.user-menu { position: relative; }
+.user-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 6px 12px;
+}
+.user-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  min-width: 200px;
+  z-index: 200;
+}
+.user-dropdown.open { display: block; }
+.user-email { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+.user-dropdown button {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 6px 12px;
+  width: 100%;
+}
+
+/* ── Nav tabs ── */
+nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 2px;
+  padding: 0 24px;
+}
+.tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 12px 16px;
+  transition: color .15s, border-color .15s;
+}
+.tab:hover { color: var(--text); }
+.tab.active { border-bottom-color: var(--gold); color: var(--gold); font-weight: 600; }
+
+/* ── Main content ── */
+main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+/* ── Toolbar ── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+/* ── Buttons ── */
+button.btn {
+  background: var(--blue);
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  white-space: nowrap;
+}
+button.btn:hover { opacity: .85; }
+button.btn.secondary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+button.btn.danger { background: var(--red); }
+button.btn.gold { background: linear-gradient(135deg, var(--gold), var(--bronze)); color: #130e05; }
+
+/* ── Tables ── */
+table { width: 100%; border-collapse: collapse; }
+th {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  padding: 8px 12px;
+  text-align: left;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,.02); }
+
+/* ── Inputs ── */
+input[type=text], input[type=number], input[type=email],
+input[type=password], select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 14px;
+  padding: 7px 11px;
+}
+input[type=text]:focus, input[type=number]:focus, input[type=email]:focus,
+input[type=password]:focus, select:focus {
+  border-color: var(--blue);
+  outline: none;
+}
+input.mini { width: 90px; }
+
+/* ── Score pills ── */
+.score {
+  border-radius: 20px;
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 10px;
+  text-align: center;
+}
+.score-great  { background: rgba(63,185,80,.2);  color: var(--green); }
+.score-ok     { background: rgba(79,140,255,.2); color: var(--blue); }
+.score-bad    { background: rgba(248,81,73,.2);  color: var(--red); }
+.score-none   { background: rgba(125,133,144,.15); color: var(--muted); }
+
+.profit { color: var(--green); font-weight: 600; }
+.loss   { color: var(--red);   font-weight: 600; }
+.muted  { color: var(--muted); }
+
+/* ── Market cards ── */
+.deal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.deal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.deal-card:hover { border-color: var(--gold); }
+.deal-card.missing { opacity: .5; }
+.deal-name { font-weight: 600; margin-bottom: 4px; }
+.deal-tier { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+.deal-row  { display: flex; justify-content: space-between; font-size: 13px; margin-top: 4px; }
+
+/* ── Detail modal ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+.modal-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.modal-row:last-child { border-bottom: none; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+/* ── Queue toast ── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--green);
+  color: #0d1117;
+  border-radius: var(--radius);
+  padding: 10px 18px;
+  font-weight: 600;
+  font-size: 13px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .2s, transform .2s;
+  pointer-events: none;
+  z-index: 1000;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── Settings form ── */
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 13px; color: var(--muted); }
+.field input, .field select { width: 100%; }
+
+/* ── Prijzen ── */
+.filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-bar input[type=text] { flex: 1; min-width: 200px; }
+
+/* ── Queue ── */
+.queue-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.queue-item:last-child { border-bottom: none; }
+.queue-name { font-weight: 500; }
+.queue-sub  { color: var(--muted); font-size: 12px; }
+.queue-remove {
+  background: none;
+  border: none;
+  color: var(--red);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+}
+.materials-summary table { margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<!-- ── Auth screen ── -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <img src="logo.png" style="width:100%;max-height:180px;object-fit:contain;margin-bottom:4px">
+    <input id="loginEmail"    type="email"    placeholder="Email">
+    <input id="loginPassword" type="password" placeholder="Wachtwoord">
+    <button id="loginButton"  type="button">Inloggen</button>
+    <button id="signupButton" type="button">Account aanmaken</button>
+    <div id="authMessage" class="auth-message"></div>
+    <div id="authDebug"   class="auth-debug"></div>
+  </div>
+</div>
+
+<!-- ── App shell ── -->
+<div id="appShell" class="app-shell">
+
+  <header class="app-header">
+    <img src="logo.png" style="height:40px;object-fit:contain">
+    <div class="user-menu">
+      <button class="user-btn" id="userBtn" type="button">👤 <span id="userEmailLabel">...</span></button>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-email" id="userEmailFull"></div>
+        <button onclick="signOutUser()">Uitloggen</button>
+      </div>
+    </div>
+  </header>
+
+  <nav>
+    <button class="tab active" onclick="showPage('market',this)">📈 Market</button>
+    <button class="tab" onclick="showPage('stock',this)">📦 Stock</button>
+    <button class="tab" onclick="showPage('prijzen',this)">💰 Prijzen</button>
+    <button class="tab" onclick="showPage('queue',this)">📋 Queue</button>
+    <button class="tab" onclick="showPage('settings',this)">⚙️</button>
+  </nav>
+
+  <main>
+
+    <!-- ── Market ── -->
+    <div id="page-market" class="page active">
+      <div class="toolbar">
+        <h2 style="font-size:18px;font-weight:700">Best Forge Deals</h2>
+        <select id="marketCity" onchange="onCityChange(this.value)" style="margin-left:auto">
+          <option>Brecilien</option>
+          <option>Bridgewatch</option>
+          <option>Caerleon</option>
+          <option>Fort Sterling</option>
+          <option>Lymhurst</option>
+          <option>Martlock</option>
+          <option>Thetford</option>
+        </select>
+        <button class="btn" onclick="loadPricesAndRender()">🔄 Verversen</button>
+        <span id="marketStatus" class="muted" style="font-size:12px"></span>
+      </div>
+      <div id="dealCards" class="deal-grid"></div>
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th><th>T</th><th>Score</th>
+              <th>Materiaal</th><th>Verkoop</th><th>Winst</th><th>ROI</th><th>Status</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="dealRows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Stock ── -->
+    <div id="page-stock" class="page">
+      <div class="card">
+        <div class="card-title">Mijn Voorraad</div>
+        <p class="muted" style="margin-bottom:16px;font-size:13px">
+          Vul hier in hoeveel materiaal je hebt en voor welke prijs je het gekocht hebt.
+          De market gebruikt je aankoopprijs zolang die goedkoper is dan de marktprijs.
+        </p>
+        <table>
+          <thead>
+            <tr><th>Materiaal</th><th>Tier</th><th>Aankoopprijs</th><th>Aantal</th><th>Marktprijs</th></tr>
+          </thead>
+          <tbody id="stockRows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Prijzen ── -->
+    <div id="page-prijzen" class="page">
+      <div class="card">
+        <div class="toolbar">
+          <div class="card-title" style="margin:0">Prijzen</div>
+          <select id="prijzenCity" onchange="renderPrijzen()">
+            <option>Brecilien</option>
+            <option>Bridgewatch</option>
+            <option>Caerleon</option>
+            <option>Fort Sterling</option>
+            <option>Lymhurst</option>
+            <option>Martlock</option>
+            <option>Thetford</option>
+          </select>
+          <button class="btn" onclick="loadPrijzenData()">🔄 Ophalen</button>
+          <span id="prijzenStatus" class="muted" style="font-size:12px"></span>
+        </div>
+        <div class="filter-bar">
+          <input type="text" id="prijzenSearch" placeholder="Zoeken..." oninput="renderPrijzen()">
+          <select id="prijzenTier" onchange="renderPrijzen()">
+            <option value="">Alle tiers</option>
+            <option>4</option><option>5</option><option>6</option><option>7</option><option>8</option>
+          </select>
+          <select id="prijzenEnch" onchange="renderPrijzen()">
+            <option value="">Alle</option>
+            <option value="0">.0</option><option value="1">.1</option>
+            <option value="2">.2</option><option value="3">.3</option><option value="4">.4</option>
+          </select>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Naam</th><th>Type</th><th>Tier</th><th>Huidige prijs</th><th>24 uur gem.</th><th>7 dagen gem.</th></tr>
+          </thead>
+          <tbody id="prijzenRows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Queue ── -->
+    <div id="page-queue" class="page">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="card">
+          <div class="card-title">Craft Queue</div>
+          <div id="queueList"></div>
+          <p id="queueEmpty" class="muted" style="font-size:13px">Geen items in de queue. Voeg toe via de Market.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">Benodigde Materialen</div>
+          <table>
+            <thead><tr><th>Materiaal</th><th>Nodig</th><th>In stock</th><th>Kopen</th></tr></thead>
+            <tbody id="materialsRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Settings ── -->
+    <div id="page-settings" class="page">
+      <div class="card" style="max-width:480px">
+        <div class="card-title">Instellingen</div>
+        <div class="settings-grid">
+          <div class="field">
+            <label>Market Tax %</label>
+            <input type="number" id="setTax" step="0.1" value="6.5">
+          </div>
+          <div class="field">
+            <label>Return Rate % (normaal)</label>
+            <input type="number" id="setReturn" step="0.1" value="15">
+          </div>
+          <div class="field">
+            <label>Return Rate % (Lymhurst swords)</label>
+            <input type="number" id="setLymhurst" step="0.1" value="24.8">
+          </div>
+          <div class="field">
+            <label>Station Fee per 100 Nutrition</label>
+            <input type="number" id="setStation" step="1" value="500">
+          </div>
+        </div>
+        <button class="btn gold" style="margin-top:20px" onclick="saveSettings()">Opslaan</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── Detail modal ── -->
+<div id="detailModal" class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle"></div>
+    <div id="modalBody"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="addToQueue()">➕ Add to Queue</button>
+      <button class="btn secondary" onclick="closeModal()">Sluiten</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ── -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════
+
+const CITIES = ["Brecilien","Bridgewatch","Caerleon","Fort Sterling","Lymhurst","Martlock","Thetford"];
+const TIERS   = [4,5,6,7,8];
+const ENCHANTS = [0,1,2,3,4];
+
+const ITEMS = [
+  { id:"broadsword",    name:"Broadsword",    base:"MAIN_SWORD",            hand:1, artifact:null },
+  { id:"claymore",      name:"Claymore",       base:"2H_CLAYMORE",           hand:2, artifact:null },
+  { id:"dual_swords",   name:"Dual Swords",    base:"2H_DUALSWORD",          hand:2, artifact:null },
+  { id:"clarent_blade", name:"Clarent Blade",  base:"MAIN_SCIMITAR_MORGANA", hand:1, artifact:"CLARENT_BLADE_ARTIFACT" },
+  { id:"carving_sword", name:"Carving Sword",  base:"2H_CLEAVER_HELL",       hand:2, artifact:"CARVING_SWORD_ARTIFACT" },
+  { id:"galatine_pair", name:"Galatine Pair",  base:"2H_DUALSCIMITAR_UNDEAD",hand:2, artifact:"GALATINE_PAIR_ARTIFACT" },
+  { id:"kingmaker",     name:"Kingmaker",      base:"2H_CLAYMORE_AVALON",    hand:2, artifact:"KINGMAKER_ARTIFACT" },
+  { id:"infinity_blade",name:"Infinity Blade", base:"MAIN_SWORD_CRYSTAL",    hand:1, artifact:"INFINITY_BLADE_ARTIFACT" },
+];
+
+const NUTRITION = { 4:225, 5:450, 6:900, 7:1800, 8:3600 };
+
+const RESOURCE_BASES = ["METALBAR","LEATHER","PLANKS"];
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+
+let forgeSupabase = null;
+
+const DEFAULT_SETTINGS = {
+  city: "Brecilien",
+  taxRate: 6.5,
+  returnRate: 15,
+  lymhurstBonus: 24.8,
+  stationFee: 500,
+};
+
+let state = {
+  settings: { ...DEFAULT_SETTINGS },
+  stock: {},    // itemId -> { qty, price }
+  queue: [],    // [{ item, tier, enchant, qty }]
+};
+
+let _prices      = {};   // itemId -> most recent price
+let _avg24h      = {};
+let _avg7d       = {};
+let _prijzenData = { prices:{}, avg24h:{}, avg7d:{} };
+let _currentDetail = null;  // { item, tier, enchant }
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem("forgescope_v2");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state.settings = { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) };
+      state.stock    = parsed.stock || {};
+      state.queue    = parsed.queue || [];
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  localStorage.setItem("forgescope_v2", JSON.stringify(state));
+}
+
+// ═══════════════════════════════════════════════════
+// ITEM ID HELPERS
+// ═══════════════════════════════════════════════════
+
+function swordId(base, tier, enchant) {
+  return enchant === 0 ? `T${tier}_${base}` : `T${tier}_${base}@${enchant}`;
+}
+
+function resourceId(base, tier, enchant) {
+  if (enchant === 0) return `T${tier}_${base}`;
+  return `T${tier}_${base}_LEVEL${enchant}@${enchant}`;
+}
+
+function artifactId(base, tier) {
+  return `T${tier}_${base}`;
+}
+
+function allItemIds() {
+  const ids = new Set();
+  for (const item of ITEMS) {
+    for (const t of TIERS) for (const e of ENCHANTS) ids.add(swordId(item.base, t, e));
+    if (item.artifact) for (const t of TIERS) ids.add(artifactId(item.artifact, t));
+  }
+  for (const res of RESOURCE_BASES)
+    for (const t of TIERS) for (const e of ENCHANTS) ids.add(resourceId(res, t, e));
+  return [...ids];
+}
+
+// ═══════════════════════════════════════════════════
+// CALCULATIONS
+// ═══════════════════════════════════════════════════
+
+function getReturnRate() {
+  const city = state.settings.city;
+  return city === "Lymhurst" ? state.settings.lymhurstBonus : state.settings.returnRate;
+}
+
+function effectiveCost(itemId, qty, priceMap) {
+  const market = priceMap[itemId] || 0;
+  const stock  = state.stock[itemId];
+  if (stock && stock.qty > 0 && stock.price > 0) {
+    if (market > 0 && market < stock.price) return { cost: qty * market, price: market, source: "market" };
+    const used = Math.min(qty, stock.qty);
+    const rest = Math.max(0, qty - used);
+    const restPrice = market > 0 ? market : stock.price;
+    return {
+      cost: used * stock.price + rest * restPrice,
+      price: qty > 0 ? (used * stock.price + rest * restPrice) / qty : 0,
+      source: rest > 0 ? "mix" : "stock",
+    };
+  }
+  return { cost: qty * market, price: market, source: "market" };
+}
+
+function getRecipe(item, tier, enchant) {
+  const metal   = item.hand === 1 ? 16 : 20;
+  const leather = item.hand === 1 ? 8  : 12;
+  const ing = [
+    { label:"Metal",   id: resourceId("METALBAR", tier, enchant), qty: metal,   returnable: true },
+    { label:"Leather", id: resourceId("LEATHER",  tier, enchant), qty: leather, returnable: true },
+  ];
+  if (item.artifact) {
+    ing.push({ label:"Artifact", id: artifactId(item.artifact, tier), qty: 1, returnable: false });
+  }
+  return ing;
+}
+
+function calculate(item, tier, enchant, priceMap) {
+  const recipe      = getRecipe(item, tier, enchant);
+  let returnableCost    = 0;
+  let nonReturnableCost = 0;
+  const missing = [];
+  const breakdown = [];
+
+  for (const ing of recipe) {
+    const eff = effectiveCost(ing.id, ing.qty, priceMap);
+    if (!eff.price) missing.push(ing.label);
+    breakdown.push({ ...ing, eff });
+    if (ing.returnable) returnableCost    += eff.cost;
+    else                nonReturnableCost += eff.cost;
+  }
+
+  const rr          = getReturnRate() / 100;
+  const matCost     = nonReturnableCost + returnableCost * (1 - rr);
+  const sellId      = swordId(item.base, tier, enchant);
+  const sellPrice   = priceMap[sellId] || 0;
+  const netSell     = sellPrice * (1 - state.settings.taxRate / 100);
+  const craftFee    = (NUTRITION[tier] || 225) * (state.settings.stationFee / 100);
+  const profit      = netSell - matCost - craftFee;
+  const roi         = matCost > 0 ? (profit / matCost) * 100 : 0;
+
+  let score = 0;
+  if (!missing.length && netSell > 0) {
+    score = Math.round(roi);
+    if (profit > 10000) score += 10;
+    if (profit > 50000) score += 20;
+  }
+
+  return { item, tier, enchant, matCost, netSell, craftFee, profit, roi, missing, score, breakdown, sellId, sellPrice };
+}
+
+// ═══════════════════════════════════════════════════
+// SUPABASE PRICE LOADING
+// ═══════════════════════════════════════════════════
+
+async function fetchPrices(ids, city, since) {
+  if (!forgeSupabase || !ids.length) return [];
+  const idSet = new Set(ids);
+  const { data: rows } = await forgeSupabase
+    .from("price_history")
+    .select("item_id, price, created_at")
+    .eq("city", city)
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(50000);
+  return (rows || []).filter(r => idSet.has(r.item_id));
+}
+
+function groupLatest(rows) {
+  const map = {};
+  for (const r of rows) {
+    if (!map[r.item_id] && r.price > 0) map[r.item_id] = r.price;
+  }
+  return map;
+}
+
+function groupAvg(rows) {
+  const lists = {};
+  for (const r of rows) {
+    if (r.price <= 0) continue;
+    if (!lists[r.item_id]) lists[r.item_id] = [];
+    lists[r.item_id].push(r.price);
+  }
+  const avg = {};
+  for (const [id, ps] of Object.entries(lists)) {
+    const sorted = [...ps].sort((a,b)=>a-b);
+    const med = sorted[Math.floor(sorted.length/2)];
+    const filtered = sorted.filter(p => p >= med/3 && p <= med*3);
+    if (filtered.length) avg[id] = Math.round(filtered.reduce((s,p)=>s+p,0)/filtered.length);
+  }
+  return avg;
+}
+
+async function loadPricesAndRender() {
+  if (!forgeSupabase) return;
+  const status = document.getElementById("marketStatus");
+  if (status) status.textContent = "Laden...";
+
+  const city  = state.settings.city;
+  const ids   = allItemIds();
+  const since7d = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+  const since24h = new Date(Date.now() - 24*60*60*1000).toISOString();
+
+  const [rows7d, rows24h] = await Promise.all([
+    fetchPrices(ids, city, since7d),
+    fetchPrices(ids, city, since24h),
+  ]);
+
+  _avg7d  = groupAvg(rows7d);
+  _avg24h = groupAvg(rows24h);
+  _prices = groupLatest(rows24h);
+
+  if (status) status.textContent = "Ververst om " + new Date().toLocaleTimeString("nl-NL", { hour:"2-digit", minute:"2-digit" });
+
+  renderMarket();
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: MARKET
+// ═══════════════════════════════════════════════════
+
+function scoreClass(s) {
+  if (s >= 30)  return "score score-great";
+  if (s >= 10)  return "score score-ok";
+  if (s >= 0)   return "score score-bad";
+  return "score score-none";
+}
+
+function money(v) {
+  return Math.round(Number(v||0)).toLocaleString("nl-NL");
+}
+
+function renderMarket() {
+  const results = [];
+  for (const item of ITEMS)
+    for (const t of TIERS)
+      for (const e of ENCHANTS)
+        results.push(calculate(item, t, e, _prices));
+
+  results.sort((a,b) => {
+    const aOk = !a.missing.length && a.netSell > 0;
+    const bOk = !b.missing.length && b.netSell > 0;
+    if (aOk && !bOk) return -1;
+    if (!aOk && bOk) return 1;
+    return b.profit - a.profit;
+  });
+
+  const cards = document.getElementById("dealCards");
+  const rows  = document.getElementById("dealRows");
+  if (!cards || !rows) return;
+
+  cards.innerHTML = results.slice(0,12).map(r => {
+    const ok = !r.missing.length && r.netSell > 0;
+    return `<div class="deal-card${ok?"":" missing"}" onclick='openDetail(${JSON.stringify({item:r.item.id,tier:r.tier,enchant:r.enchant})})'>
+      <div class="deal-name">${r.item.name}</div>
+      <div class="deal-tier">T${r.tier}.${r.enchant}</div>
+      <div style="margin-bottom:8px"><span class="${scoreClass(r.score)}">${ok ? r.score : "—"}</span></div>
+      <div class="deal-row"><span class="muted">Winst</span><span class="${r.profit>=0?"profit":"loss"}">${ok ? money(r.profit) : "N/A"}</span></div>
+      <div class="deal-row"><span class="muted">ROI</span><span>${ok ? r.roi.toFixed(1)+"%" : "—"}</span></div>
+    </div>`;
+  }).join("");
+
+  rows.innerHTML = results.map(r => {
+    const ok = !r.missing.length && r.netSell > 0;
+    const st = r.missing.length ? `<span class="muted">Missing: ${r.missing.join(", ")}</span>`
+             : r.profit > 0 ? '<span style="color:var(--green)">Craft</span>'
+             : '<span class="muted">Niet winstgevend</span>';
+    return `<tr onclick='openDetail(${JSON.stringify({item:r.item.id,tier:r.tier,enchant:r.enchant})})' style="cursor:pointer">
+      <td><b>${r.item.name}</b></td>
+      <td class="muted">T${r.tier}.${r.enchant}</td>
+      <td><span class="${scoreClass(r.score)}">${ok ? r.score : "—"}</span></td>
+      <td>${ok ? money(r.matCost) : "—"}</td>
+      <td>${r.netSell > 0 ? money(r.netSell) : "—"}</td>
+      <td class="${r.profit>=0?"profit":"loss"}">${ok ? money(r.profit) : "—"}</td>
+      <td>${ok ? r.roi.toFixed(1)+"%" : "—"}</td>
+      <td>${st}</td>
+      <td><button class="btn secondary" style="padding:4px 10px;font-size:12px" onclick="event.stopPropagation();addToQueueDirect('${r.item.id}',${r.tier},${r.enchant})">+ Queue</button></td>
+    </tr>`;
+  }).join("");
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: DETAIL MODAL
+// ═══════════════════════════════════════════════════
+
+function openDetail(params) {
+  const item = ITEMS.find(i => i.id === params.item);
+  if (!item) return;
+  _currentDetail = { item, tier: params.tier, enchant: params.enchant };
+  const r = calculate(item, params.tier, params.enchant, _prices);
+
+  document.getElementById("modalTitle").textContent = `${item.name} — T${r.tier}.${r.enchant}`;
+
+  let html = "";
+  for (const ing of r.breakdown) {
+    const eff = ing.eff;
+    html += `<div class="modal-row">
+      <span>${ing.label} ×${ing.qty}</span>
+      <span>${eff.price ? money(eff.cost) + " <small class='muted'>(${eff.source})</small>" : '<span class="muted">Geen prijs</span>'}</span>
+    </div>`;
+  }
+  html += `<div class="modal-row"><span class="muted">Crafting fee</span><span>${money(r.craftFee)}</span></div>`;
+  html += `<div class="modal-row"><span>Materiaalkosten</span><span>${money(r.matCost)}</span></div>`;
+  html += `<div class="modal-row"><span>Verkoop (na tax)</span><span>${r.netSell > 0 ? money(r.netSell) : '<span class="muted">Geen prijs</span>'}</span></div>`;
+  html += `<div class="modal-row"><span><b>Winst</b></span><span class="${r.profit>=0?"profit":"loss"}"><b>${money(r.profit)}</b></span></div>`;
+  html += `<div class="modal-row"><span>ROI</span><span>${r.roi.toFixed(1)}%</span></div>`;
+
+  document.getElementById("modalBody").innerHTML = html;
+  document.getElementById("detailModal").classList.add("active");
+}
+
+function closeModal() {
+  document.getElementById("detailModal").classList.remove("active");
+}
+
+function addToQueue() {
+  if (!_currentDetail) return;
+  const { item, tier, enchant } = _currentDetail;
+  addToQueueDirect(item.id, tier, enchant);
+  closeModal();
+}
+
+function addToQueueDirect(itemId, tier, enchant) {
+  const item = ITEMS.find(i => i.id === itemId);
+  if (!item) return;
+  const existing = state.queue.find(q => q.itemId === itemId && q.tier === tier && q.enchant === enchant);
+  if (existing) existing.qty++;
+  else state.queue.push({ itemId, tier, enchant, qty: 1 });
+  saveState();
+  showToast("Toegevoegd aan queue");
+  renderQueue();
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: STOCK
+// ═══════════════════════════════════════════════════
+
+function renderStock() {
+  const tbody = document.getElementById("stockRows");
+  if (!tbody) return;
+
+  const rows = [];
+  for (const res of RESOURCE_BASES) {
+    for (const t of TIERS) {
+      for (const e of ENCHANTS) {
+        const id = resourceId(res, t, e);
+        const s  = state.stock[id] || { qty: 0, price: 0 };
+        const mp = _prices[id] || 0;
+        const label = resourceLabel(res, t, e);
+        rows.push({ id, label, t, e, s, mp });
+      }
+    }
+  }
+
+  tbody.innerHTML = rows.map(({ id, label, t, e, s, mp }) => `
+    <tr>
+      <td>${label}</td>
+      <td class="muted">T${t}.${e}</td>
+      <td><input class="mini" type="number" min="0" value="${s.price||""}" placeholder="Prijs"
+        onchange="updateStock('${id}','price',this.value)"></td>
+      <td><input class="mini" type="number" min="0" value="${s.qty||""}" placeholder="Aantal"
+        onchange="updateStock('${id}','qty',this.value)"></td>
+      <td class="muted">${mp ? money(mp) : "—"}</td>
+    </tr>`).join("");
+}
+
+function resourceLabel(base, tier, enchant) {
+  const ench = ["","Uncommon ","Rare ","Exceptional ","Pristine "][enchant] || "";
+  const names = {
+    METALBAR: { 4:"Steel Bar", 5:"Titanium Bar", 6:"Runite Steel Bar", 7:"Meteorite Steel Bar", 8:"Adamantium Steel Bar" },
+    LEATHER:  { 4:"Worked Leather", 5:"Cured Leather", 6:"Hardened Leather", 7:"Reinforced Leather", 8:"Fortified Leather" },
+    PLANKS:   { 4:"Pine Planks", 5:"Cedar Planks", 6:"Bloodoak Planks", 7:"Ashenbark Planks", 8:"Whitewood Planks" },
+  };
+  return ench + (names[base]?.[tier] || base);
+}
+
+function updateStock(id, field, value) {
+  if (!state.stock[id]) state.stock[id] = { qty: 0, price: 0 };
+  state.stock[id][field] = Number(value) || 0;
+  saveState();
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: PRIJZEN
+// ═══════════════════════════════════════════════════
+
+let _prijzenRows = [];
+
+async function loadPrijzenData() {
+  if (!forgeSupabase) return;
+  const status = document.getElementById("prijzenStatus");
+  if (status) status.textContent = "Laden...";
+
+  const city  = document.getElementById("prijzenCity")?.value || state.settings.city;
+  const ids   = allItemIds();
+  const since7d  = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+  const since24h = new Date(Date.now() - 24*60*60*1000).toISOString();
+
+  const [rows7d, rows24h] = await Promise.all([
+    fetchPrices(ids, city, since7d),
+    fetchPrices(ids, city, since24h),
+  ]);
+
+  const avg7d  = groupAvg(rows7d);
+  const avg24h = groupAvg(rows24h);
+  const latest = groupLatest(rows24h);
+
+  _prijzenRows = [];
+
+  for (const item of ITEMS) {
+    for (const t of TIERS) for (const e of ENCHANTS) {
+      const id = swordId(item.base, t, e);
+      _prijzenRows.push({ name: item.name, type: "Sword", tier: t, enchant: e, id, latest: latest[id]||0, avg24h: avg24h[id]||0, avg7d: avg7d[id]||0 });
+    }
+  }
+  for (const res of RESOURCE_BASES) {
+    for (const t of TIERS) for (const e of ENCHANTS) {
+      const id = resourceId(res, t, e);
+      _prijzenRows.push({ name: resourceLabel(res,t,e), type: "Resource", tier: t, enchant: e, id, latest: latest[id]||0, avg24h: avg24h[id]||0, avg7d: avg7d[id]||0 });
+    }
+  }
+
+  if (status) status.textContent = "Ververst om " + new Date().toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  renderPrijzen();
+}
+
+function renderPrijzen() {
+  const tbody  = document.getElementById("prijzenRows");
+  if (!tbody) return;
+  const search = (document.getElementById("prijzenSearch")?.value||"").toLowerCase();
+  const tier   = document.getElementById("prijzenTier")?.value || "";
+  const ench   = document.getElementById("prijzenEnch")?.value;
+
+  const filtered = _prijzenRows.filter(r => {
+    if (search && !r.name.toLowerCase().includes(search)) return false;
+    if (tier && String(r.tier) !== tier) return false;
+    if (ench !== "" && ench !== undefined && String(r.enchant) !== ench) return false;
+    return true;
+  });
+
+  tbody.innerHTML = filtered.map(r => `
+    <tr>
+      <td>${r.name}</td>
+      <td class="muted">${r.type}</td>
+      <td class="muted">T${r.tier}.${r.enchant}</td>
+      <td>${r.latest ? money(r.latest) : '<span class="muted">—</span>'}</td>
+      <td>${r.avg24h ? money(r.avg24h) : '<span class="muted">—</span>'}</td>
+      <td>${r.avg7d  ? money(r.avg7d)  : '<span class="muted">—</span>'}</td>
+    </tr>`).join("");
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: QUEUE
+// ═══════════════════════════════════════════════════
+
+function renderQueue() {
+  const list   = document.getElementById("queueList");
+  const empty  = document.getElementById("queueEmpty");
+  const matTbl = document.getElementById("materialsRows");
+  if (!list) return;
+
+  if (!state.queue.length) {
+    list.innerHTML = "";
+    if (empty) empty.style.display = "";
+    if (matTbl) matTbl.innerHTML = "";
+    return;
+  }
+  if (empty) empty.style.display = "none";
+
+  list.innerHTML = state.queue.map((q,i) => {
+    const item = ITEMS.find(it => it.id === q.itemId);
+    return `<div class="queue-item">
+      <div>
+        <div class="queue-name">${item?.name || q.itemId}</div>
+        <div class="queue-sub">T${q.tier}.${q.enchant}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input class="mini" type="number" min="1" value="${q.qty}" onchange="updateQueueQty(${i},this.value)" style="width:60px">
+        <button class="queue-remove" onclick="removeFromQueue(${i})">✕</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  // Aggregate materials
+  const totals = {};
+  for (const q of state.queue) {
+    const item = ITEMS.find(it => it.id === q.itemId);
+    if (!item) continue;
+    const recipe = getRecipe(item, q.tier, q.enchant);
+    for (const ing of recipe) {
+      if (!totals[ing.id]) totals[ing.id] = { label: ing.label, id: ing.id, qty: 0 };
+      totals[ing.id].qty += ing.qty * q.qty;
+    }
+  }
+
+  if (matTbl) {
+    matTbl.innerHTML = Object.values(totals).map(m => {
+      const stock = state.stock[m.id] || { qty: 0 };
+      const need  = Math.max(0, m.qty - (stock.qty || 0));
+      return `<tr>
+        <td>${m.label}<br><small class="muted">${m.id}</small></td>
+        <td>${m.qty.toLocaleString()}</td>
+        <td>${(stock.qty||0).toLocaleString()}</td>
+        <td class="${need>0?"loss":""}">${need > 0 ? need.toLocaleString() : "✓"}</td>
+      </tr>`;
+    }).join("");
+  }
+}
+
+function updateQueueQty(index, val) {
+  const n = parseInt(val) || 1;
+  if (state.queue[index]) state.queue[index].qty = Math.max(1, n);
+  saveState();
+  renderQueue();
+}
+
+function removeFromQueue(index) {
+  state.queue.splice(index, 1);
+  saveState();
+  renderQueue();
+}
+
+// ═══════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════
+
+function renderSettings() {
+  document.getElementById("setTax").value      = state.settings.taxRate;
+  document.getElementById("setReturn").value   = state.settings.returnRate;
+  document.getElementById("setLymhurst").value = state.settings.lymhurstBonus;
+  document.getElementById("setStation").value  = state.settings.stationFee;
+
+  const mc = document.getElementById("marketCity");
+  const pc = document.getElementById("prijzenCity");
+  if (mc) mc.value = state.settings.city;
+  if (pc) pc.value = state.settings.city;
+}
+
+function saveSettings() {
+  state.settings.taxRate       = parseFloat(document.getElementById("setTax").value)      || 6.5;
+  state.settings.returnRate    = parseFloat(document.getElementById("setReturn").value)   || 15;
+  state.settings.lymhurstBonus = parseFloat(document.getElementById("setLymhurst").value) || 24.8;
+  state.settings.stationFee    = parseFloat(document.getElementById("setStation").value)  || 500;
+  saveState();
+  showToast("Instellingen opgeslagen");
+}
+
+function onCityChange(city) {
+  state.settings.city = city;
+  saveState();
+  loadPricesAndRender();
+}
+
+// ═══════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════
+
+function showPage(id, btn) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  const page = document.getElementById("page-" + id);
+  if (page) page.classList.add("active");
+  if (btn)  btn.classList.add("active");
+}
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+
+let _toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+// ═══════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════
+
+function getAuthConfig() {
+  return {
+    url: window.FORGESCOPE_SUPABASE_URL  || "",
+    key: window.FORGESCOPE_SUPABASE_ANON_KEY || "",
+  };
+}
+
+function showAuthScreen(show) {
+  const screen = document.getElementById("authScreen");
+  const shell  = document.getElementById("appShell");
+  if (!screen || !shell) return;
+  if (show) {
+    screen.classList.add("active");
+    shell.classList.remove("visible");
+  } else {
+    screen.classList.remove("active");
+    shell.classList.add("visible");
+  }
+}
+
+function setUserLabel(email) {
+  const label = document.getElementById("userEmailLabel");
+  const full  = document.getElementById("userEmailFull");
+  if (label) label.textContent = email ? email.split("@")[0] : "Account";
+  if (full)  full.textContent  = email || "";
+}
+
+function setAuthMessage(msg) {
+  const el = document.getElementById("authMessage");
+  if (el) el.textContent = msg || "";
+}
+
+async function signInUser() {
+  const email = document.getElementById("loginEmail")?.value.trim();
+  const pass  = document.getElementById("loginPassword")?.value;
+  if (!email || !pass) { setAuthMessage("Vul email en wachtwoord in."); return; }
+  setAuthMessage("Inloggen...");
+  const { error } = await forgeSupabase.auth.signInWithPassword({ email, password: pass });
+  if (error) setAuthMessage(error.message);
+  else setAuthMessage("");
+}
+
+async function signUpUser() {
+  const email = document.getElementById("loginEmail")?.value.trim();
+  const pass  = document.getElementById("loginPassword")?.value;
+  if (!email || !pass) { setAuthMessage("Vul email en wachtwoord in."); return; }
+  if (pass.length < 6) { setAuthMessage("Wachtwoord minimaal 6 tekens."); return; }
+  setAuthMessage("Account aanmaken...");
+  const { error } = await forgeSupabase.auth.signUp({ email, password: pass });
+  if (error) setAuthMessage(error.message);
+  else setAuthMessage("Check je email ter bevestiging.");
+}
+
+async function signOutUser() {
+  if (forgeSupabase) await forgeSupabase.auth.signOut();
+  showAuthScreen(true);
+  setUserLabel("");
+  document.getElementById("userDropdown")?.classList.remove("open");
+}
+
+function initApp(session) {
+  setUserLabel(session?.user?.email || "");
+  showAuthScreen(false);
+  loadState();
+  renderSettings();
+  renderStock();
+  renderQueue();
+  loadPricesAndRender();
+}
+
+function initSupabaseAuth() {
+  const cfg = getAuthConfig();
+  if (!window.supabase || !cfg.url || !cfg.key) {
+    showAuthScreen(true);
+    setAuthMessage("Supabase config ontbreekt.");
+    return;
+  }
+
+  forgeSupabase = window.supabase.createClient(cfg.url, cfg.key);
+  window.forgeSupabase = forgeSupabase;
+
+  forgeSupabase.auth.getSession().then(({ data }) => {
+    if (data?.session) initApp(data.session);
+    else showAuthScreen(true);
+  });
+
+  forgeSupabase.auth.onAuthStateChange((_ev, session) => {
+    if (session) initApp(session);
+    else showAuthScreen(true);
+  });
+}
+
+function bindButtons() {
+  document.getElementById("loginButton")?.addEventListener("click", signInUser);
+  document.getElementById("signupButton")?.addEventListener("click", signUpUser);
+  document.getElementById("loginPassword")?.addEventListener("keydown", e => { if (e.key==="Enter") signInUser(); });
+  document.getElementById("userBtn")?.addEventListener("click", () => {
+    document.getElementById("userDropdown")?.classList.toggle("open");
+  });
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".user-menu")) document.getElementById("userDropdown")?.classList.remove("open");
+  });
+}
+
+window.addEventListener("load", () => {
+  initSupabaseAuth();
+  bindButtons();
+});
+</script>
+
+</body>
+</html>
