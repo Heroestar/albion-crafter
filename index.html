@@ -9,19 +9,21 @@
 window.FORGESCOPE_SUPABASE_URL = "https://huhpjepvqfkuezxmxnuw.supabase.co";
 window.FORGESCOPE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1aHBqZXB2cWZrdWV6eG14bnV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMTE5MzUsImV4cCI6MjA5NDY4NzkzNX0.ql9Zzbrj4ohh_jsrt1KHxP5XK8_SEMyMW3XGNx4WtvQ";
 </script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:       #0d1117;
   --surface:  #161b22;
   --border:   #21262d;
   --gold:     #d4a017;
+  --gold2:    #f0c040;
   --bronze:   #a0522d;
   --text:     #e6edf3;
   --muted:    #7d8590;
   --green:    #3fb950;
   --red:      #f85149;
   --blue:     #4f8cff;
-  --radius:   8px;
+  --radius:   10px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -30,7 +32,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 14px;
+  font-size: 16px;
   min-height: 100vh;
 }
 
@@ -49,21 +51,22 @@ body {
 .auth-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 32px;
+  border-radius: 16px;
+  padding: 40px;
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+  box-shadow: 0 24px 64px rgba(0,0,0,.6);
 }
 .auth-card input {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
-  padding: 10px 14px;
-  font-size: 14px;
+  padding: 13px 16px;
+  font-size: 15px;
   width: 100%;
 }
 .auth-card button {
@@ -72,12 +75,14 @@ body {
   border-radius: var(--radius);
   color: #130e05;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  padding: 10px;
+  padding: 13px;
   width: 100%;
+  transition: opacity .15s;
 }
-.auth-message { color: var(--red); font-size: 13px; min-height: 18px; }
+.auth-card button:hover { opacity: .9; }
+.auth-message { color: var(--red); font-size: 14px; min-height: 20px; }
 .auth-debug   { color: var(--muted); font-size: 12px; }
 
 /* ── App shell ── */
@@ -85,51 +90,55 @@ body {
 .app-shell.visible { display: block; }
 
 .app-header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0 24px;
+  background: linear-gradient(180deg, #1a2030 0%, var(--surface) 100%);
+  border-bottom: 2px solid var(--gold);
+  padding: 0 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
+  height: 72px;
   position: sticky;
   top: 0;
   z-index: 100;
+  box-shadow: 0 4px 20px rgba(212,160,23,.15);
 }
-.brand { font-size: 18px; font-weight: 700; color: var(--gold); }
 
 .user-menu { position: relative; }
 .user-btn {
-  background: none;
-  border: 1px solid var(--border);
+  background: rgba(212,160,23,.1);
+  border: 1px solid rgba(212,160,23,.3);
   border-radius: var(--radius);
-  color: var(--muted);
+  color: var(--gold);
   cursor: pointer;
-  font-size: 13px;
-  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+  transition: background .15s;
 }
+.user-btn:hover { background: rgba(212,160,23,.2); }
 .user-dropdown {
   display: none;
   position: absolute;
   right: 0;
-  top: calc(100% + 6px);
+  top: calc(100% + 8px);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px;
-  min-width: 200px;
+  padding: 14px;
+  min-width: 220px;
   z-index: 200;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
 }
 .user-dropdown.open { display: block; }
-.user-email { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+.user-email { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
 .user-dropdown button {
   background: none;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
   cursor: pointer;
-  font-size: 13px;
-  padding: 6px 12px;
+  font-size: 14px;
+  padding: 8px 14px;
   width: 100%;
 }
 
@@ -138,24 +147,29 @@ nav {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   display: flex;
-  gap: 2px;
-  padding: 0 24px;
+  gap: 4px;
+  padding: 0 32px;
 }
 .tab {
   background: none;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-bottom: 3px solid transparent;
   color: var(--muted);
   cursor: pointer;
-  font-size: 14px;
-  padding: 12px 16px;
+  font-size: 16px;
+  padding: 16px 20px;
   transition: color .15s, border-color .15s;
+  letter-spacing: .01em;
 }
 .tab:hover { color: var(--text); }
-.tab.active { border-bottom-color: var(--gold); color: var(--gold); font-weight: 600; }
+.tab.active {
+  border-bottom-color: var(--gold);
+  color: var(--gold);
+  font-weight: 700;
+}
 
 /* ── Main content ── */
-main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+main { padding: 32px; max-width: 1500px; margin: 0 auto; }
 .page { display: none; }
 .page.active { display: block; }
 
@@ -163,66 +177,75 @@ main { padding: 24px; max-width: 1400px; margin: 0 auto; }
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 20px;
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
 }
 .card-title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   color: var(--text);
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
 }
 
 /* ── Toolbar ── */
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 14px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 
 /* ── Buttons ── */
 button.btn {
-  background: var(--blue);
+  background: linear-gradient(135deg, #4f8cff, #3a6fd8);
   border: none;
   border-radius: var(--radius);
   color: #fff;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
-  padding: 8px 16px;
+  padding: 10px 20px;
   white-space: nowrap;
+  transition: opacity .15s, transform .1s;
+  box-shadow: 0 2px 8px rgba(79,140,255,.3);
 }
-button.btn:hover { opacity: .85; }
+button.btn:hover { opacity: .9; transform: translateY(-1px); }
+button.btn:active { transform: translateY(0); }
 button.btn.secondary {
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
+  box-shadow: none;
 }
-button.btn.danger { background: var(--red); }
-button.btn.gold { background: linear-gradient(135deg, var(--gold), var(--bronze)); color: #130e05; }
+button.btn.danger { background: linear-gradient(135deg, #f85149, #c0392b); box-shadow: 0 2px 8px rgba(248,81,73,.3); }
+button.btn.gold { background: linear-gradient(135deg, var(--gold2), var(--gold), var(--bronze)); color: #130e05; box-shadow: 0 2px 12px rgba(212,160,23,.4); }
 
 /* ── Tables ── */
 table { width: 100%; border-collapse: collapse; }
 th {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .05em;
-  padding: 8px 12px;
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  padding: 12px 16px;
   text-align: left;
   text-transform: uppercase;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid var(--border);
+  background: rgba(212,160,23,.05);
 }
 td {
-  padding: 10px 12px;
+  padding: 13px 16px;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
+  font-size: 15px;
 }
 tr:last-child td { border-bottom: none; }
-tr:hover td { background: rgba(255,255,255,.02); }
+tr:hover td { background: rgba(212,160,23,.04); }
 
 /* ── Inputs ── */
 input[type=text], input[type=number], input[type=email],
@@ -231,110 +254,234 @@ input[type=password], select {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
-  font-size: 14px;
-  padding: 7px 11px;
+  font-size: 15px;
+  padding: 9px 14px;
 }
 input[type=text]:focus, input[type=number]:focus, input[type=email]:focus,
 input[type=password]:focus, select:focus {
-  border-color: var(--blue);
+  border-color: var(--gold);
   outline: none;
+  box-shadow: 0 0 0 3px rgba(212,160,23,.15);
 }
-input.mini { width: 90px; }
+input.mini { width: 100px; }
 
 /* ── Score pills ── */
 .score {
   border-radius: 20px;
   display: inline-block;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 2px 10px;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 4px 14px;
   text-align: center;
+  letter-spacing: .02em;
 }
-.score-great  { background: rgba(63,185,80,.2);  color: var(--green); }
-.score-ok     { background: rgba(79,140,255,.2); color: var(--blue); }
-.score-bad    { background: rgba(248,81,73,.2);  color: var(--red); }
-.score-none   { background: rgba(125,133,144,.15); color: var(--muted); }
+.score-great  { background: rgba(63,185,80,.2);  color: var(--green); border: 1px solid rgba(63,185,80,.3); }
+.score-ok     { background: rgba(79,140,255,.2); color: var(--blue);  border: 1px solid rgba(79,140,255,.3); }
+.score-bad    { background: rgba(248,81,73,.2);  color: var(--red);   border: 1px solid rgba(248,81,73,.3); }
+.score-none   { background: rgba(125,133,144,.1); color: var(--muted); }
 
-.profit { color: var(--green); font-weight: 600; }
-.loss   { color: var(--red);   font-weight: 600; }
+.profit { color: var(--green); font-weight: 700; font-size: 15px; }
+.loss   { color: var(--red);   font-weight: 700; font-size: 15px; }
 .muted  { color: var(--muted); }
 
 /* ── Market cards ── */
 .deal-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 12px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
 }
 .deal-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
+  border-radius: 12px;
+  padding: 20px;
   cursor: pointer;
-  transition: border-color .15s;
+  transition: border-color .2s, transform .15s, box-shadow .2s;
+  border-top: 3px solid var(--border);
+  position: relative;
+  overflow: hidden;
 }
-.deal-card:hover { border-color: var(--gold); }
-.deal-card.missing { opacity: .5; }
-.deal-name { font-weight: 600; margin-bottom: 4px; }
-.deal-tier { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
-.deal-row  { display: flex; justify-content: space-between; font-size: 13px; margin-top: 4px; }
+.deal-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--bronze));
+  opacity: 0;
+  transition: opacity .2s;
+}
+.deal-card:hover { border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(212,160,23,.15); }
+.deal-card:hover::before { opacity: 1; }
+.deal-card.missing { opacity: .45; }
+.deal-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+.deal-tier { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+.deal-row  { display: flex; justify-content: space-between; font-size: 14px; margin-top: 6px; }
 
 /* ── Detail modal ── */
 .modal-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.7);
+  background: rgba(0,0,0,.75);
   z-index: 500;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  backdrop-filter: blur(4px);
 }
 .modal-overlay.active { display: flex; }
 .modal {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 28px;
-  max-width: 560px;
+  border: 1px solid var(--gold);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 580px;
   width: 100%;
-  max-height: 80vh;
+  max-height: 85vh;
   overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0,0,0,.6), 0 0 0 1px rgba(212,160,23,.2);
 }
-.modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
-.modal-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.modal-title { font-size: 22px; font-weight: 700; margin-bottom: 24px; color: var(--gold); }
+.modal-row { display: flex; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border); font-size: 15px; }
 .modal-row:last-child { border-bottom: none; }
-.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+.modal-actions { display: flex; gap: 12px; margin-top: 24px; }
 
 /* ── Queue toast ── */
 .toast {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
-  background: var(--green);
+  bottom: 28px;
+  right: 28px;
+  background: linear-gradient(135deg, var(--green), #2ea043);
   color: #0d1117;
   border-radius: var(--radius);
-  padding: 10px 18px;
-  font-weight: 600;
-  font-size: 13px;
+  padding: 12px 22px;
+  font-weight: 700;
+  font-size: 14px;
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(10px);
   transition: opacity .2s, transform .2s;
   pointer-events: none;
   z-index: 1000;
+  box-shadow: 0 4px 16px rgba(63,185,80,.4);
 }
 .toast.show { opacity: 1; transform: translateY(0); }
 
 /* ── Settings form ── */
-.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.field { display: flex; flex-direction: column; gap: 6px; }
-.field label { font-size: 13px; color: var(--muted); }
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field label { font-size: 14px; color: var(--muted); font-weight: 600; }
 .field input, .field select { width: 100%; }
 
 /* ── Prijzen ── */
-.filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
 .filter-bar input[type=text] { flex: 1; min-width: 200px; }
+
+/* ── Koop Alert Panel ── */
+.koop-panel {
+  position: fixed;
+  left: 12px;
+  bottom: 20px;
+  width: 210px;
+  background: var(--surface);
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(63,185,80,.15);
+  z-index: 400;
+  overflow: hidden;
+  display: none;
+  opacity: 0.85;
+  transition: opacity .2s;
+}
+.koop-panel:hover { opacity: 1; }
+.koop-panel.visible { display: block; }
+.koop-panel.collapsed .koop-rows { display: none; }
+.koop-panel.collapsed .koop-header button { transform: rotate(180deg); }
+
+.koop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: rgba(63,185,80,.1);
+  border-bottom: 1px solid rgba(63,185,80,.15);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+}
+.koop-header button {
+  background: none;
+  border: none;
+  color: var(--green);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  transition: transform .2s;
+}
+.koop-rows { padding: 4px 0; max-height: 200px; overflow-y: auto; }
+.koop-row {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background .1s;
+}
+.koop-row:last-child { border-bottom: none; }
+.koop-row:hover { background: rgba(63,185,80,.06); }
+.koop-name { font-size: 11px; font-weight: 600; color: var(--text); }
+.koop-prices { display: flex; justify-content: space-between; margin-top: 2px; font-size: 11px; }
+.koop-current { color: var(--green); font-weight: 700; }
+.koop-discount {
+  background: rgba(63,185,80,.2);
+  color: var(--green);
+  border-radius: 8px;
+  padding: 0 5px;
+  font-weight: 800;
+  font-size: 10px;
+}
+
+/* ── Queue FAB ── */
+#queueFab {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold2), var(--gold), var(--bronze));
+  border: none;
+  cursor: pointer;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(212,160,23,.5), 0 0 0 3px rgba(212,160,23,.2);
+  transition: transform .2s, box-shadow .2s;
+  z-index: 400;
+}
+#queueFab:hover {
+  transform: scale(1.1) translateY(-2px);
+  box-shadow: 0 8px 32px rgba(212,160,23,.6), 0 0 0 4px rgba(212,160,23,.25);
+}
+#queueFab:active { transform: scale(0.97); }
+
+.fab-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--red);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 900;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--bg);
+  box-shadow: 0 2px 8px rgba(248,81,73,.6);
+  pointer-events: none;
+}
 
 /* ── Queue ── */
 .queue-item {
@@ -377,7 +524,21 @@ input.mini { width: 90px; }
 <div id="appShell" class="app-shell">
 
   <header class="app-header">
-    <img src="logo.png" style="height:40px;object-fit:contain">
+    <div style="display:flex;align-items:center;gap:14px">
+      <img src="logo.png" style="height:48px;object-fit:contain">
+      <span style="
+        font-family:'Cinzel Decorative',serif;
+        font-size:22px;
+        font-weight:900;
+        background:linear-gradient(135deg,#f0c040,#d4a017,#a0522d);
+        -webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;
+        background-clip:text;
+        letter-spacing:.08em;
+        text-shadow:none;
+        line-height:1;
+      ">Albion Reaper</span>
+    </div>
     <div class="user-menu">
       <button class="user-btn" id="userBtn" type="button">👤 <span id="userEmailLabel">...</span></button>
       <div class="user-dropdown" id="userDropdown">
@@ -388,11 +549,11 @@ input.mini { width: 90px; }
   </header>
 
   <nav>
-    <button class="tab active" onclick="showPage('market',this)">📈 Market</button>
-    <button class="tab" onclick="showPage('stock',this)">📦 Stock</button>
-    <button class="tab" onclick="showPage('prijzen',this)">💰 Prijzen</button>
-    <button class="tab" onclick="showPage('queue',this)">📋 Queue</button>
-    <button class="tab" onclick="showPage('settings',this)">⚙️</button>
+    <button class="tab active" onclick="showPage('market',this)">📈&nbsp; Market</button>
+    <button class="tab" onclick="showPage('stock',this)">📦&nbsp; Stock</button>
+    <button class="tab" onclick="showPage('prijzen',this)">💰&nbsp; Prijzen</button>
+    <button class="tab" onclick="showPage('queue',this)">📋&nbsp; Queue</button>
+    <button class="tab" onclick="showPage('settings',this)" style="font-size:20px">⚙️</button>
   </nav>
 
   <main>
@@ -419,7 +580,7 @@ input.mini { width: 90px; }
           <thead>
             <tr>
               <th>Item</th><th>T</th><th>Score</th>
-              <th>Materiaal</th><th>Verkoop</th><th>Winst</th><th>ROI</th><th>Status</th><th></th>
+              <th>Materiaal</th><th>Verkoop</th><th>Winst</th><th>ROI</th><th>Volume/dag</th><th>Status</th><th></th>
             </tr>
           </thead>
           <tbody id="dealRows"></tbody>
@@ -535,7 +696,7 @@ input.mini { width: 90px; }
     <div class="modal-title" id="modalTitle"></div>
     <div id="modalBody"></div>
     <div class="modal-actions">
-      <button class="btn" onclick="addToQueue()">➕ Add to Queue</button>
+      <button class="btn gold" onclick="addToQueue()" style="font-size:16px;padding:12px 24px">+ Add to Queue</button>
       <button class="btn secondary" onclick="closeModal()">Sluiten</button>
     </div>
   </div>
@@ -543,6 +704,40 @@ input.mini { width: 90px; }
 
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
+
+<!-- ── Koop Alerts ── -->
+<div id="koopAlertPanel" class="koop-panel visible">
+  <div class="koop-header">
+    <span>🛒 Goedkoop nu</span>
+    <button onclick="document.getElementById('koopAlertPanel').classList.toggle('collapsed')">−</button>
+  </div>
+  <div id="koopAlertRows" class="koop-rows"></div>
+</div>
+
+<!-- ── Queue FAB ── -->
+<button id="queueFab" onclick="showPage('queue', document.querySelectorAll('.tab')[3])" title="Craft Queue">
+  <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- handle -->
+    <rect x="28" y="30" width="8" height="28" rx="3" fill="#6b3a1f" stroke="#3d1f08" stroke-width="1.5"/>
+    <!-- grip wrap -->
+    <rect x="29.5" y="36" width="5" height="3" rx="1" fill="#8b5e3c" opacity="0.7"/>
+    <rect x="29.5" y="42" width="5" height="3" rx="1" fill="#8b5e3c" opacity="0.7"/>
+    <rect x="29.5" y="48" width="5" height="3" rx="1" fill="#8b5e3c" opacity="0.7"/>
+    <!-- hammer head -->
+    <rect x="14" y="8" width="36" height="26" rx="4" fill="#8a8fa8" stroke="#5a5f78" stroke-width="1.5"/>
+    <!-- hammer face highlight -->
+    <rect x="16" y="10" width="32" height="8" rx="2" fill="#b0b5cc" opacity="0.5"/>
+    <!-- striking face left -->
+    <rect x="12" y="12" width="8" height="18" rx="3" fill="#6e7390" stroke="#4a4f68" stroke-width="1.5"/>
+    <!-- striking face right -->
+    <rect x="44" y="12" width="8" height="18" rx="3" fill="#6e7390" stroke="#4a4f68" stroke-width="1.5"/>
+    <!-- center ridge -->
+    <rect x="30" y="10" width="4" height="22" rx="2" fill="#c8cce0" opacity="0.35"/>
+    <!-- gold trim top -->
+    <rect x="14" y="8" width="36" height="4" rx="2" fill="#d4a017" opacity="0.6"/>
+  </svg>
+  <span id="queueBadge" class="fab-badge" style="display:none">0</span>
+</button>
 
 <script>
 // ═══════════════════════════════════════════════════
@@ -557,11 +752,11 @@ const ITEMS = [
   { id:"broadsword",    name:"Broadsword",    base:"MAIN_SWORD",            hand:1, artifact:null },
   { id:"claymore",      name:"Claymore",       base:"2H_CLAYMORE",           hand:2, artifact:null },
   { id:"dual_swords",   name:"Dual Swords",    base:"2H_DUALSWORD",          hand:2, artifact:null },
-  { id:"clarent_blade", name:"Clarent Blade",  base:"MAIN_SCIMITAR_MORGANA", hand:1, artifact:"CLARENT_BLADE_ARTIFACT" },
-  { id:"carving_sword", name:"Carving Sword",  base:"2H_CLEAVER_HELL",       hand:2, artifact:"CARVING_SWORD_ARTIFACT" },
-  { id:"galatine_pair", name:"Galatine Pair",  base:"2H_DUALSCIMITAR_UNDEAD",hand:2, artifact:"GALATINE_PAIR_ARTIFACT" },
-  { id:"kingmaker",     name:"Kingmaker",      base:"2H_CLAYMORE_AVALON",    hand:2, artifact:"KINGMAKER_ARTIFACT" },
-  { id:"infinity_blade",name:"Infinity Blade", base:"MAIN_SWORD_CRYSTAL",    hand:1, artifact:"INFINITY_BLADE_ARTIFACT" },
+  { id:"clarent_blade", name:"Clarent Blade",  base:"MAIN_SCIMITAR_MORGANA", hand:1, artifact:"ARTEFACT_MAIN_SCIMITAR_MORGANA",  artifactName:"Bloodforged Blade" },
+  { id:"carving_sword", name:"Carving Sword",  base:"2H_CLEAVER_HELL",       hand:2, artifact:"ARTEFACT_2H_CLEAVER_HELL",         artifactName:"Demon Blade" },
+  { id:"galatine_pair", name:"Galatine Pair",  base:"2H_DUALSCIMITAR_UNDEAD",hand:2, artifact:"ARTEFACT_2H_DUALSCIMITAR_UNDEAD",  artifactName:"Cursed Blades" },
+  { id:"kingmaker",     name:"Kingmaker",      base:"2H_CLAYMORE_AVALON",    hand:2, artifact:"ARTEFACT_2H_CLAYMORE_AVALON",       artifactName:"Remnants of the Old King" },
+  { id:"infinity_blade",name:"Infinity Blade", base:"MAIN_SWORD_CRYSTAL",    hand:1, artifact:"ARTEFACT_MAIN_SWORD_CRYSTAL",       artifactName:"Infinite Crystal" },
 ];
 
 const NUTRITION = { 4:225, 5:450, 6:900, 7:1800, 8:3600 };
@@ -591,6 +786,7 @@ let state = {
 let _prices      = {};   // itemId -> most recent price
 let _avg24h      = {};
 let _avg7d       = {};
+let _volume      = {};   // itemId -> avg daily volume (from AODP)
 let _prijzenData = { prices:{}, avg24h:{}, avg7d:{} };
 let _currentDetail = null;  // { item, tier, enchant }
 
@@ -715,6 +911,37 @@ function calculate(item, tier, enchant, priceMap) {
 // SUPABASE PRICE LOADING
 // ═══════════════════════════════════════════════════
 
+async function loadVolumeData() {
+  const city = state.settings.city;
+  const ids  = allItemIds().filter(id => !id.includes("ARTIFACT"));
+  const end  = new Date();
+  const start = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const dateStr    = start.toISOString().split("T")[0];
+  const endDateStr = end.toISOString().split("T")[0];
+  const base = "https://europe.albion-online-data.com/api/v2/stats/charts";
+  const chunkSize = 20;
+  const vol = {};
+
+  for (let i = 0; i < ids.length; i += chunkSize) {
+    const chunk = ids.slice(i, i + chunkSize);
+    const url   = `${base}/${chunk.join(",")}.json?locations=${encodeURIComponent(city)}&date=${dateStr}&end_date=${endDateStr}&qualities=1`;
+    try {
+      const res  = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      for (const entry of (Array.isArray(data) ? data : [data])) {
+        const counts = entry?.data?.item_count;
+        if (!counts || !counts.length) continue;
+        const avg = Math.round(counts.reduce((s, v) => s + v, 0) / counts.length);
+        if (avg > 0) vol[entry.item_id] = avg;
+      }
+    } catch { continue; }
+  }
+
+  _volume = vol;
+  renderMarket();
+}
+
 async function fetchPrices(ids, city, since) {
   if (!forgeSupabase || !ids.length) return [];
   const idSet = new Set(ids);
@@ -728,10 +955,14 @@ async function fetchPrices(ids, city, since) {
   return (rows || []).filter(r => idSet.has(r.item_id));
 }
 
-function groupLatest(rows) {
+function groupLatest(rows, avg7d) {
   const map = {};
   for (const r of rows) {
-    if (!map[r.item_id] && r.price > 0) map[r.item_id] = r.price;
+    if (!map[r.item_id] && r.price > 0) {
+      const avg = avg7d?.[r.item_id];
+      if (avg && (r.price < avg / 4 || r.price > avg * 4)) continue;
+      map[r.item_id] = r.price;
+    }
   }
   return map;
 }
@@ -770,11 +1001,13 @@ async function loadPricesAndRender() {
 
   _avg7d  = groupAvg(rows7d);
   _avg24h = groupAvg(rows24h);
-  _prices = groupLatest(rows24h);
+  _prices = groupLatest(rows24h, _avg7d);
 
   if (status) status.textContent = "Ververst om " + new Date().toLocaleTimeString("nl-NL", { hour:"2-digit", minute:"2-digit" });
 
   renderMarket();
+  renderKoopAlerts();
+  loadVolumeData();
 }
 
 // ═══════════════════════════════════════════════════
@@ -819,6 +1052,7 @@ function renderMarket() {
       <div style="margin-bottom:8px"><span class="${scoreClass(r.score)}">${ok ? r.score : "—"}</span></div>
       <div class="deal-row"><span class="muted">Winst</span><span class="${r.profit>=0?"profit":"loss"}">${ok ? money(r.profit) : "N/A"}</span></div>
       <div class="deal-row"><span class="muted">ROI</span><span>${ok ? r.roi.toFixed(1)+"%" : "—"}</span></div>
+      <div class="deal-row"><span class="muted">Volume/dag</span><span class="muted">${_volume[r.sellId] ? money(_volume[r.sellId]) : "—"}</span></div>
     </div>`;
   }).join("");
 
@@ -835,8 +1069,9 @@ function renderMarket() {
       <td>${r.netSell > 0 ? money(r.netSell) : "—"}</td>
       <td class="${r.profit>=0?"profit":"loss"}">${ok ? money(r.profit) : "—"}</td>
       <td>${ok ? r.roi.toFixed(1)+"%" : "—"}</td>
+      <td class="muted">${_volume[r.sellId] ? money(_volume[r.sellId]) : "—"}</td>
       <td>${st}</td>
-      <td><button class="btn secondary" style="padding:4px 10px;font-size:12px" onclick="event.stopPropagation();addToQueueDirect('${r.item.id}',${r.tier},${r.enchant})">+ Queue</button></td>
+      <td><button class="btn secondary" style="padding:4px 10px;font-size:12px" onclick="event.stopPropagation();addToQueueDirect('${r.item.id}',${r.tier},${r.enchant})">＋ Queue</button></td>
     </tr>`;
   }).join("");
 }
@@ -858,7 +1093,7 @@ function openDetail(params) {
     const eff = ing.eff;
     html += `<div class="modal-row">
       <span>${ing.label} ×${ing.qty}</span>
-      <span>${eff.price ? money(eff.cost) + " <small class='muted'>(${eff.source})</small>" : '<span class="muted">Geen prijs</span>'}</span>
+      <span>${eff.price ? money(eff.cost) : '<span class="muted">Geen prijs</span>'}</span>
     </div>`;
   }
   html += `<div class="modal-row"><span class="muted">Crafting fee</span><span>${money(r.craftFee)}</span></div>`;
@@ -891,6 +1126,7 @@ function addToQueueDirect(itemId, tier, enchant) {
   saveState();
   showToast("Toegevoegd aan queue");
   renderQueue();
+  updateQueueBadge();
 }
 
 // ═══════════════════════════════════════════════════
@@ -924,6 +1160,19 @@ function renderStock() {
         onchange="updateStock('${id}','qty',this.value)"></td>
       <td class="muted">${mp ? money(mp) : "—"}</td>
     </tr>`).join("");
+}
+
+function friendlyIngredientName(id) {
+  const tierMatch = id.match(/^T(\d+)_/);
+  const enchMatch = id.match(/LEVEL(\d+)@|@(\d+)$/);
+  const tier   = tierMatch ? tierMatch[1] : "?";
+  const enchant = enchMatch ? (enchMatch[1] || enchMatch[2]) : "0";
+
+  if (id.includes("METALBAR")) return `Metal Bar T${tier}.${enchant}`;
+  if (id.includes("LEATHER"))  return `Leather T${tier}.${enchant}`;
+  if (id.includes("PLANKS"))   return `Planks T${tier}.${enchant}`;
+  if (id.includes("ARTIFACT")) return `Artifact T${tier}`;
+  return id;
 }
 
 function resourceLabel(base, tier, enchant) {
@@ -965,7 +1214,7 @@ async function loadPrijzenData() {
 
   const avg7d  = groupAvg(rows7d);
   const avg24h = groupAvg(rows24h);
-  const latest = groupLatest(rows24h);
+  const latest = groupLatest(rows24h, avg7d);
 
   _prijzenRows = [];
 
@@ -979,6 +1228,12 @@ async function loadPrijzenData() {
     for (const t of TIERS) for (const e of ENCHANTS) {
       const id = resourceId(res, t, e);
       _prijzenRows.push({ name: resourceLabel(res,t,e), type: "Resource", tier: t, enchant: e, id, latest: latest[id]||0, avg24h: avg24h[id]||0, avg7d: avg7d[id]||0 });
+    }
+  }
+  for (const item of ITEMS.filter(i => i.artifact)) {
+    for (const t of TIERS) {
+      const id = artifactId(item.artifact, t);
+      _prijzenRows.push({ name: item.artifactName, type: "Artifact", tier: t, enchant: 0, id, latest: latest[id]||0, avg24h: avg24h[id]||0, avg7d: avg7d[id]||0 });
     }
   }
 
@@ -1015,6 +1270,61 @@ function renderPrijzen() {
 // RENDER: QUEUE
 // ═══════════════════════════════════════════════════
 
+function renderKoopAlerts() {
+  const panel = document.getElementById("koopAlertPanel");
+  const rows  = document.getElementById("koopAlertRows");
+  if (!panel || !rows) return;
+
+  const threshold = 0.10; // 10% goedkoper dan 7d gemiddelde
+  const alerts = [];
+
+  for (const res of RESOURCE_BASES) {
+    for (const t of TIERS) {
+      for (const e of ENCHANTS) {
+        const id      = resourceId(res, t, e);
+        const current = _prices[id] || 0;
+        const avg7d   = _avg7d[id]  || 0;
+        if (!current || !avg7d) continue;
+        const discount = (avg7d - current) / avg7d;
+        if (discount >= threshold) {
+          alerts.push({ id, name: friendlyIngredientName(id), current, avg7d, discount });
+        }
+      }
+    }
+  }
+
+  alerts.sort((a, b) => b.discount - a.discount);
+
+  panel.classList.add("visible");
+
+  if (!alerts.length) {
+    rows.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--muted)">Geen koopjes op dit moment.</div>';
+    return;
+  }
+  rows.innerHTML = alerts.map(a => `
+    <div class="koop-row" onclick="showPage('prijzen', document.querySelectorAll('.tab')[2])">
+      <div class="koop-name">${a.name}</div>
+      <div class="koop-prices">
+        <span class="koop-current">${money(a.current)}</span>
+        <span class="muted" style="font-size:11px">gem. ${money(a.avg7d)}</span>
+        <span class="koop-discount">-${Math.round(a.discount*100)}%</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+function updateQueueBadge() {
+  const badge = document.getElementById("queueBadge");
+  const count = state.queue.reduce((s, q) => s + q.qty, 0);
+  if (!badge) return;
+  if (count > 0) {
+    badge.textContent = count > 99 ? "99+" : count;
+    badge.style.display = "flex";
+  } else {
+    badge.style.display = "none";
+  }
+}
+
 function renderQueue() {
   const list   = document.getElementById("queueList");
   const empty  = document.getElementById("queueEmpty");
@@ -1050,7 +1360,7 @@ function renderQueue() {
     if (!item) continue;
     const recipe = getRecipe(item, q.tier, q.enchant);
     for (const ing of recipe) {
-      if (!totals[ing.id]) totals[ing.id] = { label: ing.label, id: ing.id, qty: 0 };
+        if (!totals[ing.id]) totals[ing.id] = { label: ing.label, id: ing.id, qty: 0, returnable: ing.returnable };
       totals[ing.id].qty += ing.qty * q.qty;
     }
   }
@@ -1058,10 +1368,12 @@ function renderQueue() {
   if (matTbl) {
     matTbl.innerHTML = Object.values(totals).map(m => {
       const stock = state.stock[m.id] || { qty: 0 };
-      const need  = Math.max(0, m.qty - (stock.qty || 0));
+      const rr = m.returnable ? getReturnRate() / 100 : 0;
+      const effectiveQty = Math.ceil(m.qty * (1 - rr));
+      const need = Math.max(0, effectiveQty - (stock.qty || 0));
       return `<tr>
-        <td>${m.label}<br><small class="muted">${m.id}</small></td>
-        <td>${m.qty.toLocaleString()}</td>
+        <td>${friendlyIngredientName(m.id)}</td>
+        <td>${m.qty.toLocaleString()} <small class="muted">→ ${effectiveQty}</small></td>
         <td>${(stock.qty||0).toLocaleString()}</td>
         <td class="${need>0?"loss":""}">${need > 0 ? need.toLocaleString() : "✓"}</td>
       </tr>`;
@@ -1080,6 +1392,7 @@ function removeFromQueue(index) {
   state.queue.splice(index, 1);
   saveState();
   renderQueue();
+  updateQueueBadge();
 }
 
 // ═══════════════════════════════════════════════════
