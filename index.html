@@ -572,6 +572,12 @@ input.mini { width: 100px; }
           <option>Thetford</option>
         </select>
         <button class="btn" onclick="loadPricesAndRender()">🔄 Verversen</button>
+        <select id="maxEnchantFilter" onchange="calculate()" style="margin-left:8px">
+          <option value="4">Alle enchants</option>
+          <option value="2">Max .2</option>
+          <option value="1">Max .1</option>
+          <option value="0">Alleen .0</option>
+        </select>
         <span id="marketStatus" class="muted" style="font-size:12px"></span>
       </div>
       <div id="dealCards" class="deal-grid"></div>
@@ -696,6 +702,7 @@ input.mini { width: 100px; }
     <div class="modal-title" id="modalTitle"></div>
     <div id="modalBody"></div>
     <div class="modal-actions">
+      <input id="modalQty" type="number" min="1" value="1" style="width:64px;font-size:16px;padding:11px 10px;background:#161b22;color:#e6edf3;border:1px solid #21262d;border-radius:6px;text-align:center">
       <button class="btn gold" onclick="addToQueue()" style="font-size:16px;padding:12px 24px">+ Add to Queue</button>
       <button class="btn secondary" onclick="closeModal()">Sluiten</button>
     </div>
@@ -757,6 +764,36 @@ const ITEMS = [
   { id:"galatine_pair", name:"Galatine Pair",  base:"2H_DUALSCIMITAR_UNDEAD",hand:2, artifact:"ARTEFACT_2H_DUALSCIMITAR_UNDEAD",  artifactName:"Cursed Blades" },
   { id:"kingmaker",     name:"Kingmaker",      base:"2H_CLAYMORE_AVALON",    hand:2, artifact:"ARTEFACT_2H_CLAYMORE_AVALON",       artifactName:"Remnants of the Old King" },
   { id:"infinity_blade",name:"Infinity Blade", base:"MAIN_SWORD_CRYSTAL",    hand:1, artifact:"ARTEFACT_MAIN_SWORD_CRYSTAL",       artifactName:"Infinite Crystal" },
+
+  // Plate Armor — Chest
+  { id:"soldier_armor",     name:"Soldier Armor",     base:"ARMOR_PLATE_SET1",    bars:16, category:"plate" },
+  { id:"knight_armor",      name:"Knight Armor",      base:"ARMOR_PLATE_SET2",    bars:16, category:"plate" },
+  { id:"guardian_armor",    name:"Guardian Armor",    base:"ARMOR_PLATE_SET3",    bars:16, category:"plate" },
+  { id:"graveguard_armor",  name:"Graveguard Armor",  base:"ARMOR_PLATE_UNDEAD",  bars:16, category:"plate", artifact:"ARTEFACT_ARMOR_PLATE_UNDEAD",  artifactName:"Ancient Chain Rings" },
+  { id:"demon_armor",       name:"Demon Armor",       base:"ARMOR_PLATE_HELL",    bars:16, category:"plate", artifact:"ARTEFACT_ARMOR_PLATE_HELL",    artifactName:"Demonic Plates" },
+  { id:"judicator_armor",   name:"Judicator Armor",   base:"ARMOR_PLATE_MORGANA", bars:16, category:"plate", artifact:"ARTEFACT_ARMOR_PLATE_MORGANA", artifactName:"Preserved Animal Fur" },
+  { id:"duskweaver_armor",  name:"Duskweaver Armor",  base:"ARMOR_PLATE_CRYSTAL", bars:16, category:"plate", artifact:"ARTEFACT_ARMOR_PLATE_CRYSTAL", artifactName:"Veilweaver Carapace" },
+  { id:"valor_armor",       name:"Armor of Valor",    base:"ARMOR_PLATE_AVALON",  bars:16, category:"plate", artifact:"ARTEFACT_ARMOR_PLATE_AVALON",  artifactName:"Exalted Plating" },
+
+  // Plate Armor — Head
+  { id:"soldier_helmet",    name:"Soldier Helmet",    base:"HEAD_PLATE_SET1",     bars:8, category:"plate" },
+  { id:"knight_helmet",     name:"Knight Helmet",     base:"HEAD_PLATE_SET2",     bars:8, category:"plate" },
+  { id:"guardian_helmet",   name:"Guardian Helmet",   base:"HEAD_PLATE_SET3",     bars:8, category:"plate" },
+  { id:"graveguard_helmet", name:"Graveguard Helmet", base:"HEAD_PLATE_UNDEAD",   bars:8, category:"plate", artifact:"ARTEFACT_HEAD_PLATE_UNDEAD",   artifactName:"Ancient Padding" },
+  { id:"demon_helmet",      name:"Demon Helmet",      base:"HEAD_PLATE_HELL",     bars:8, category:"plate", artifact:"ARTEFACT_HEAD_PLATE_HELL",     artifactName:"Demonic Scraps" },
+  { id:"judicator_helmet",  name:"Judicator Helmet",  base:"HEAD_PLATE_MORGANA",  bars:8, category:"plate", artifact:"ARTEFACT_HEAD_PLATE_MORGANA",  artifactName:"Carved Skull Padding" },
+  { id:"duskweaver_helmet", name:"Duskweaver Helmet", base:"HEAD_PLATE_CRYSTAL",  bars:8, category:"plate", artifact:"ARTEFACT_HEAD_PLATE_CRYSTAL",  artifactName:"Veilweaver Mandibles" },
+  { id:"valor_helmet",      name:"Helmet of Valor",   base:"HEAD_PLATE_AVALON",   bars:8, category:"plate", artifact:"ARTEFACT_HEAD_PLATE_AVALON",   artifactName:"Exalted Visor" },
+
+  // Plate Armor — Feet
+  { id:"soldier_boots",      name:"Soldier Boots",       base:"SHOES_PLATE_SET1",        bars:8,  category:"plate" },
+  { id:"knight_boots",       name:"Knight Boots",        base:"SHOES_PLATE_SET2",        bars:8,  category:"plate" },
+  { id:"guardian_boots",     name:"Guardian Boots",      base:"SHOES_PLATE_SET3",        bars:8,  category:"plate" },
+  { id:"graveguard_boots",   name:"Graveguard Boots",    base:"SHOES_PLATE_UNDEAD",      bars:8,  category:"plate", artifact:"ARTEFACT_SHOES_PLATE_UNDEAD",   artifactName:"Ancient Bindings" },
+  { id:"demon_boots",        name:"Demon Boots",         base:"SHOES_PLATE_HELL",        bars:8,  category:"plate", artifact:"ARTEFACT_SHOES_PLATE_HELL",     artifactName:"Demonic Filling" },
+  { id:"judicator_boots",    name:"Judicator Boots",     base:"SHOES_PLATE_MORGANA",     bars:8,  category:"plate", artifact:"ARTEFACT_SHOES_PLATE_MORGANA",  artifactName:"Inscribed Bindings" },
+  { id:"duskweaver_boots",   name:"Duskweaver Boots",    base:"SHOES_PLATE_CRYSTAL",     bars:8,  category:"plate", artifact:"ARTEFACT_SHOES_PLATE_CRYSTAL",  artifactName:"Veilweaver Claws" },
+  { id:"valor_boots",        name:"Boots of Valor",      base:"SHOES_PLATE_AVALON",      bars:8,  category:"plate", artifact:"ARTEFACT_SHOES_PLATE_AVALON",   artifactName:"Exalted Greave" },
 ];
 
 const NUTRITION = { 4:225, 5:450, 6:900, 7:1800, 8:3600 };
@@ -779,8 +816,9 @@ const DEFAULT_SETTINGS = {
 
 let state = {
   settings: { ...DEFAULT_SETTINGS },
-  stock: {},    // itemId -> { qty, price }
-  queue: [],    // [{ item, tier, enchant, qty }]
+  stock: {},         // itemId -> { qty, price }
+  queue: [],         // [{ item, tier, enchant, qty }]
+  checkedMats: {},   // itemId -> true (afgevinkt)
 };
 
 let _prices      = {};   // itemId -> most recent price
@@ -795,9 +833,10 @@ function loadState() {
     const saved = localStorage.getItem("forgescope_v2");
     if (saved) {
       const parsed = JSON.parse(saved);
-      state.settings = { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) };
-      state.stock    = parsed.stock || {};
-      state.queue    = parsed.queue || [];
+      state.settings     = { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) };
+      state.stock        = parsed.stock || {};
+      state.queue        = parsed.queue || [];
+      state.checkedMats  = parsed.checkedMats || {};
     }
   } catch(e) {}
 }
@@ -861,6 +900,15 @@ function effectiveCost(itemId, qty, priceMap) {
 }
 
 function getRecipe(item, tier, enchant) {
+  if (item.category === "plate") {
+    const ing = [
+      { label:"Metal", id: resourceId("METALBAR", tier, enchant), qty: item.bars, returnable: true },
+    ];
+    if (item.artifact) {
+      ing.push({ label:"Artifact", id: artifactId(item.artifact, tier), qty: 1, returnable: false });
+    }
+    return ing;
+  }
   const metal   = item.hand === 1 ? 16 : 20;
   const leather = item.hand === 1 ? 8  : 12;
   const ing = [
@@ -1026,10 +1074,11 @@ function money(v) {
 }
 
 function renderMarket() {
+  const maxE = parseInt(document.getElementById("maxEnchantFilter")?.value ?? 4);
   const results = [];
   for (const item of ITEMS)
     for (const t of TIERS)
-      for (const e of ENCHANTS)
+      for (const e of ENCHANTS.filter(e => e <= maxE))
         results.push(calculate(item, t, e, _prices));
 
   results.sort((a,b) => {
@@ -1044,15 +1093,31 @@ function renderMarket() {
   const rows  = document.getElementById("dealRows");
   if (!cards || !rows) return;
 
-  cards.innerHTML = results.slice(0,12).map(r => {
-    const ok = !r.missing.length && r.netSell > 0;
-    return `<div class="deal-card${ok?"":" missing"}" onclick='openDetail(${JSON.stringify({item:r.item.id,tier:r.tier,enchant:r.enchant})})'>
-      <div class="deal-name">${r.item.name}</div>
-      <div class="deal-tier">T${r.tier}.${r.enchant}</div>
-      <div style="margin-bottom:8px"><span class="${scoreClass(r.score)}">${ok ? r.score : "—"}</span></div>
-      <div class="deal-row"><span class="muted">Winst</span><span class="${r.profit>=0?"profit":"loss"}">${ok ? money(r.profit) : "N/A"}</span></div>
-      <div class="deal-row"><span class="muted">ROI</span><span>${ok ? r.roi.toFixed(1)+"%" : "—"}</span></div>
-      <div class="deal-row"><span class="muted">Volume/dag</span><span class="muted">${_volume[r.sellId] ? money(_volume[r.sellId]) : "—"}</span></div>
+  // Laad/schoon dismissed kaartjes op
+  const now = Date.now();
+  const dismissed = JSON.parse(localStorage.getItem("dismissed_cards") || "{}");
+  for (const k of Object.keys(dismissed)) {
+    if (now - dismissed[k] > 86400000) delete dismissed[k];
+  }
+  localStorage.setItem("dismissed_cards", JSON.stringify(dismissed));
+
+  const visibleCards = results.filter(r => !dismissed[`${r.item.id}_${r.tier}_${r.enchant}`]);
+
+  cards.innerHTML = visibleCards.slice(0,12).map(r => {
+    const ok  = !r.missing.length && r.netSell > 0;
+    const key = `${r.item.id}_${r.tier}_${r.enchant}`;
+    return `<div class="deal-card${ok?"":" missing"}" style="position:relative">
+      <button onclick="event.stopPropagation();dismissCard('${key}')"
+        style="position:absolute;top:6px;right:6px;z-index:10;background:rgba(22,27,34,0.8);border:none;color:#7d8590;font-size:14px;cursor:pointer;line-height:1;padding:4px 7px;border-radius:4px"
+        title="Verberg 24u">✕</button>
+      <div onclick='openDetail(${JSON.stringify({item:r.item.id,tier:r.tier,enchant:r.enchant})})' style="cursor:pointer;padding-top:4px">
+        <div class="deal-name">${r.item.name}</div>
+        <div class="deal-tier">T${r.tier}.${r.enchant}</div>
+        <div style="margin-bottom:8px"><span class="${scoreClass(r.score)}">${ok ? r.score : "—"}</span></div>
+        <div class="deal-row"><span class="muted">Winst</span><span class="${r.profit>=0?"profit":"loss"}">${ok ? money(r.profit) : "N/A"}</span></div>
+        <div class="deal-row"><span class="muted">ROI</span><span>${ok ? r.roi.toFixed(1)+"%" : "—"}</span></div>
+        <div class="deal-row"><span class="muted">Volume/dag</span><span class="muted">${_volume[r.sellId] ? money(_volume[r.sellId]) : "—"}</span></div>
+      </div>
     </div>`;
   }).join("");
 
@@ -1079,6 +1144,13 @@ function renderMarket() {
 // ═══════════════════════════════════════════════════
 // RENDER: DETAIL MODAL
 // ═══════════════════════════════════════════════════
+
+function dismissCard(key) {
+  const dismissed = JSON.parse(localStorage.getItem("dismissed_cards") || "{}");
+  dismissed[key] = Date.now();
+  localStorage.setItem("dismissed_cards", JSON.stringify(dismissed));
+  renderMarket();
+}
 
 function openDetail(params) {
   const item = ITEMS.find(i => i.id === params.item);
@@ -1113,16 +1185,17 @@ function closeModal() {
 function addToQueue() {
   if (!_currentDetail) return;
   const { item, tier, enchant } = _currentDetail;
-  addToQueueDirect(item.id, tier, enchant);
+  const qty = Math.max(1, parseInt(document.getElementById("modalQty").value) || 1);
+  addToQueueDirect(item.id, tier, enchant, qty);
   closeModal();
 }
 
-function addToQueueDirect(itemId, tier, enchant) {
+function addToQueueDirect(itemId, tier, enchant, qty = 1) {
   const item = ITEMS.find(i => i.id === itemId);
   if (!item) return;
   const existing = state.queue.find(q => q.itemId === itemId && q.tier === tier && q.enchant === enchant);
-  if (existing) existing.qty++;
-  else state.queue.push({ itemId, tier, enchant, qty: 1 });
+  if (existing) existing.qty += qty;
+  else state.queue.push({ itemId, tier, enchant, qty });
   saveState();
   showToast("Toegevoegd aan queue");
   renderQueue();
@@ -1339,15 +1412,36 @@ function renderQueue() {
   }
   if (empty) empty.style.display = "none";
 
-  list.innerHTML = state.queue.map((q,i) => {
+  const queueOrder = [...state.queue.keys()].sort((a,b) => {
+    const ca = state.queue[a].checked ? 1 : 0;
+    const cb = state.queue[b].checked ? 1 : 0;
+    return ca - cb;
+  });
+  list.innerHTML = queueOrder.map(i => {
+    const q = state.queue[i];
     const item = ITEMS.find(it => it.id === q.itemId);
-    return `<div class="queue-item">
-      <div>
-        <div class="queue-name">${item?.name || q.itemId}</div>
-        <div class="queue-sub">T${q.tier}.${q.enchant}</div>
+    const checked = !!q.checked;
+    const rowStyle = checked ? "opacity:.4" : "";
+    const nameStyle = checked ? "text-decoration:line-through" : "";
+    let profitHtml = "";
+    if (item && Object.keys(_prices).length) {
+      const r = calculate(item, q.tier, q.enchant, _prices);
+      const unitProfit = r.netSell;
+      const totalProfit = unitProfit * q.qty;
+      const col = unitProfit >= 0 ? "#3fb950" : "#f85149";
+      profitHtml = `<div style="font-size:11px;color:${col};margin-top:2px">${money(unitProfit)} / stuk &nbsp;·&nbsp; <b>${money(totalProfit)}</b> totaal</div>`;
+    }
+    return `<div class="queue-item" style="${rowStyle}">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+        <span onclick="toggleQueueChecked(${i})" style="cursor:pointer;font-size:18px;color:${checked?"#3fb950":"#7d8590"};flex-shrink:0" title="${checked?"Terugzetten":"Afvinken"}">${checked?"☑":"☐"}</span>
+        <div>
+          <div class="queue-name" style="${nameStyle}">${item?.name || q.itemId}</div>
+          <div class="queue-sub">T${q.tier}.${q.enchant}</div>
+          ${profitHtml}
+        </div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
-        <input class="mini" type="number" min="1" value="${q.qty}" onchange="updateQueueQty(${i},this.value)" style="width:60px">
+        <input class="mini" type="number" min="1" value="${q.qty}" onchange="updateQueueQty(${i},this.value)" style="width:60px" ${checked?"disabled":""}>
         <button class="queue-remove" onclick="removeFromQueue(${i})">✕</button>
       </div>
     </div>`;
@@ -1360,30 +1454,70 @@ function renderQueue() {
     if (!item) continue;
     const recipe = getRecipe(item, q.tier, q.enchant);
     for (const ing of recipe) {
-        if (!totals[ing.id]) totals[ing.id] = { label: ing.label, id: ing.id, qty: 0, returnable: ing.returnable };
-      totals[ing.id].qty += ing.qty * q.qty;
+      if (!totals[ing.id]) totals[ing.id] = { label: ing.label, id: ing.id, qty: 0, crafts: 0, returnable: ing.returnable };
+      totals[ing.id].qty    += ing.qty * q.qty;
+      totals[ing.id].crafts += q.qty;
     }
   }
 
   if (matTbl) {
-    matTbl.innerHTML = Object.values(totals).map(m => {
+    const matType = id => id.includes("METALBAR") ? 0 : id.includes("LEATHER") ? 1 : id.includes("PLANKS") ? 2 : 3;
+    const matLabel = t => ["Metal Bars", "Leather", "Planks", "Overig"][t];
+    const matOrder = id => {
+      const tier = ((id.match(/^T(\d+)_/) || [])[1] || 0) * 1;
+      const ench = ((id.match(/LEVEL(\d+)|@(\d+)/) || []).slice(1).find(x => x != null) || 0) * 1;
+      return matType(id) * 10000 + tier * 100 + ench;
+    };
+    const sorted = Object.values(totals).sort((a,b) => {
+      const ca = state.checkedMats[a.id] ? 1 : 0;
+      const cb = state.checkedMats[b.id] ? 1 : 0;
+      return ca - cb || matOrder(a.id) - matOrder(b.id);
+    });
+    let html = "";
+    let lastType = -1;
+    let lastChecked = -1;
+    for (const m of sorted) {
+      const t = matType(m.id);
+      const checked = !!state.checkedMats[m.id];
+      if (t !== lastType) {
+        html += `<tr><td colspan="4" style="padding:10px 0 4px;font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--gold,#d4a017);text-transform:uppercase;border-bottom:1px solid #21262d">${matLabel(t)}</td></tr>`;
+        lastType = t;
+        lastChecked = -1;
+      }
       const stock = state.stock[m.id] || { qty: 0 };
-      const rr = m.returnable ? getReturnRate() / 100 : 0;
+      const rr = (m.returnable && m.crafts > 1) ? getReturnRate() / 100 : 0;
       const effectiveQty = Math.ceil(m.qty * (1 - rr));
       const need = Math.max(0, effectiveQty - (stock.qty || 0));
-      return `<tr>
-        <td>${friendlyIngredientName(m.id)}</td>
+      const rowStyle = checked ? "opacity:.4;text-decoration:line-through;cursor:pointer" : "cursor:pointer";
+      const icon = checked ? "✓ " : "";
+      html += `<tr style="${rowStyle}" onclick="toggleMatChecked('${m.id}')">
+        <td>${icon}${friendlyIngredientName(m.id)}</td>
         <td>${m.qty.toLocaleString()} <small class="muted">→ ${effectiveQty}</small></td>
         <td>${(stock.qty||0).toLocaleString()}</td>
-        <td class="${need>0?"loss":""}">${need > 0 ? need.toLocaleString() : "✓"}</td>
+        <td class="${!checked && need>0?"loss":""}">${need > 0 ? need.toLocaleString() : "✓"}</td>
       </tr>`;
-    }).join("");
+    }
+    matTbl.innerHTML = html;
   }
 }
 
 function updateQueueQty(index, val) {
   const n = parseInt(val) || 1;
   if (state.queue[index]) state.queue[index].qty = Math.max(1, n);
+  saveState();
+  renderQueue();
+}
+
+function toggleQueueChecked(index) {
+  if (!state.queue[index]) return;
+  state.queue[index].checked = !state.queue[index].checked;
+  saveState();
+  renderQueue();
+}
+
+function toggleMatChecked(id) {
+  if (state.checkedMats[id]) delete state.checkedMats[id];
+  else state.checkedMats[id] = true;
   saveState();
   renderQueue();
 }
