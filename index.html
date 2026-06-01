@@ -315,6 +315,8 @@ input.mini { width: 100px; }
 .deal-card:hover::before { opacity: 1; }
 .deal-card.missing { opacity: .45; }
 .deal-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+.filter-pill { display:inline-block; cursor:pointer; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; border:1px solid #30363d; color:#7d8590; background:#161b22; margin:2px 3px; user-select:none; transition:all .15s; }
+.filter-pill.active { background:#d4a0170d; border-color:var(--gold); color:var(--gold); }
 .deal-tier { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
 .deal-row  { display: flex; justify-content: space-between; font-size: 14px; margin-top: 6px; }
 
@@ -440,29 +442,42 @@ input.mini { width: 100px; }
 }
 
 /* ── Queue FAB ── */
+@keyframes fabPulse {
+  0%,100% { box-shadow: 0 6px 28px rgba(212,160,23,.55), 0 0 0 4px rgba(212,160,23,.18), 0 0 60px rgba(212,160,23,.08); }
+  50%      { box-shadow: 0 6px 36px rgba(212,160,23,.75), 0 0 0 7px rgba(212,160,23,.28), 0 0 80px rgba(212,160,23,.18); }
+}
 #queueFab {
   position: fixed;
   bottom: 32px;
   right: 32px;
-  width: 64px;
-  height: 64px;
+  width: 76px;
+  height: 76px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--gold2), var(--gold), var(--bronze));
-  border: none;
+  background: linear-gradient(145deg, #f5c842 0%, #d4a017 40%, #a0720f 100%);
+  border: 2px solid rgba(255,220,80,.35);
   cursor: pointer;
-  font-size: 28px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(212,160,23,.5), 0 0 0 3px rgba(212,160,23,.2);
-  transition: transform .2s, box-shadow .2s;
+  gap: 2px;
+  animation: fabPulse 2.8s ease-in-out infinite;
+  transition: transform .18s, filter .18s;
   z-index: 400;
 }
 #queueFab:hover {
-  transform: scale(1.1) translateY(-2px);
-  box-shadow: 0 8px 32px rgba(212,160,23,.6), 0 0 0 4px rgba(212,160,23,.25);
+  transform: scale(1.12) translateY(-3px);
+  filter: brightness(1.15);
 }
-#queueFab:active { transform: scale(0.97); }
+#queueFab:active { transform: scale(0.96); }
+#queueFab .fab-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  color: rgba(30,20,0,.75);
+  text-transform: uppercase;
+  line-height: 1;
+}
 
 .fab-badge {
   position: absolute;
@@ -553,6 +568,7 @@ input.mini { width: 100px; }
     <button class="tab" onclick="showPage('stock',this)">📦&nbsp; Stock</button>
     <button class="tab" onclick="showPage('prijzen',this)">💰&nbsp; Prijzen</button>
     <button class="tab" onclick="showPage('queue',this)">📋&nbsp; Queue</button>
+    <button class="tab" onclick="showPage('verkopen',this)">💸&nbsp; Verkopen</button>
     <button class="tab" onclick="showPage('settings',this)" style="font-size:20px">⚙️</button>
   </nav>
 
@@ -560,6 +576,12 @@ input.mini { width: 100px; }
 
     <!-- ── Market ── -->
     <div id="page-market" class="page active">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <span class="muted" style="font-size:12px">Tier:</span>
+        <span id="tierPills"></span>
+        <span class="muted" style="font-size:12px;margin-left:8px">Enchant:</span>
+        <span id="enchantPills"></span>
+      </div>
       <div class="toolbar">
         <h2 style="font-size:18px;font-weight:700">Best Forge Deals</h2>
         <select id="marketCity" onchange="onCityChange(this.value)" style="margin-left:auto">
@@ -572,7 +594,7 @@ input.mini { width: 100px; }
           <option>Thetford</option>
         </select>
         <button class="btn" onclick="loadPricesAndRender()">🔄 Verversen</button>
-        <select id="maxEnchantFilter" onchange="calculate()" style="margin-left:8px">
+        <select id="maxEnchantFilter" onchange="renderMarket()" style="display:none">
           <option value="4">Alle enchants</option>
           <option value="2">Max .2</option>
           <option value="1">Max .1</option>
@@ -582,6 +604,9 @@ input.mini { width: 100px; }
       </div>
       <div id="dealCards" class="deal-grid"></div>
       <div class="card">
+        <div style="margin-bottom:12px">
+          <input type="text" id="dealRowSearch" oninput="renderMarket()" placeholder="Zoeken op naam..." style="font-size:13px;padding:6px 12px;background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:6px;width:220px">
+        </div>
         <table>
           <thead>
             <tr>
@@ -660,9 +685,41 @@ input.mini { width: 100px; }
         <div class="card">
           <div class="card-title">Benodigde Materialen</div>
           <table>
-            <thead><tr><th>Materiaal</th><th>Nodig</th><th>In stock</th><th>Kopen</th></tr></thead>
+            <thead><tr><th>Materiaal</th><th>Nodig</th><th>In stock</th><th>Kopen</th><th>Prijs</th></tr></thead>
             <tbody id="materialsRows"></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Verkopen ── -->
+    <div id="page-verkopen" class="page">
+      <div class="card">
+        <div class="card-title" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <span>Te Verkopen</span>
+          <select id="verkopenCityFilter" onchange="renderVerkopen()" style="font-size:13px;padding:4px 10px;background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:6px;cursor:pointer">
+            <option value="">Alle steden</option>
+          </select>
+          <input type="text" id="verkopenSearch" oninput="renderVerkopen()" placeholder="Zoeken..." style="font-size:13px;padding:4px 10px;background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:6px;width:180px">
+        </div>
+        <div id="verkopenList"></div>
+        <p id="verkopenEmpty" class="muted" style="font-size:13px">Geen gecraftte items. Markeer items als gecraftd via de Queue.</p>
+        <div id="verkopenTotaal" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:none">
+          <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px">
+            <span class="muted">Verwachte winst (open)</span>
+            <span id="verkopenExpected" class="profit"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:14px">
+            <span class="muted">Verkocht deze sessie</span>
+            <span id="verkopenRealized" class="profit"></span>
+          </div>
+        </div>
+        <div style="margin-top:20px;padding:16px;background:rgba(212,160,23,.07);border:1px solid rgba(212,160,23,.25);border-radius:10px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Totale winst (all-time)</div>
+            <div id="totalProfitDisplay" style="font-size:24px;font-weight:800;color:#d4a017">0</div>
+          </div>
+          <button onclick="if(confirm('Totale winst resetten naar 0?')){state.totalProfit=0;saveState();renderVerkopen();}" style="background:none;border:1px solid #30363d;color:#7d8590;font-size:12px;cursor:pointer;padding:6px 12px;border-radius:6px">Reset</button>
         </div>
       </div>
     </div>
@@ -683,6 +740,10 @@ input.mini { width: 100px; }
           <div class="field">
             <label>Return Rate % (Lymhurst swords)</label>
             <input type="number" id="setLymhurst" step="0.1" value="24.8">
+          </div>
+          <div class="field">
+            <label>Return Rate % (Fort Sterling helmets)</label>
+            <input type="number" id="setFortSterling" step="0.1" value="24.8">
           </div>
           <div class="field">
             <label>Station Fee per 100 Nutrition</label>
@@ -723,7 +784,7 @@ input.mini { width: 100px; }
 
 <!-- ── Queue FAB ── -->
 <button id="queueFab" onclick="showPage('queue', document.querySelectorAll('.tab')[3])" title="Craft Queue">
-  <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width="36" height="36" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
     <!-- handle -->
     <rect x="28" y="30" width="8" height="28" rx="3" fill="#6b3a1f" stroke="#3d1f08" stroke-width="1.5"/>
     <!-- grip wrap -->
@@ -743,6 +804,7 @@ input.mini { width: 100px; }
     <!-- gold trim top -->
     <rect x="14" y="8" width="36" height="4" rx="2" fill="#d4a017" opacity="0.6"/>
   </svg>
+  <span class="fab-label">Queue</span>
   <span id="queueBadge" class="fab-badge" style="display:none">0</span>
 </button>
 
@@ -796,7 +858,37 @@ const ITEMS = [
   { id:"valor_boots",        name:"Boots of Valor",      base:"SHOES_PLATE_AVALON",      bars:8,  category:"plate", artifact:"ARTEFACT_SHOES_PLATE_AVALON",   artifactName:"Exalted Greave" },
 ];
 
-const NUTRITION = { 4:225, 5:450, 6:900, 7:1800, 8:3600 };
+// Artifact multipliers per exact artifact ID (confirmed from in-game data)
+const ARTIFACT_MULT = {
+  ARTEFACT_MAIN_SCIMITAR_MORGANA:   4,   // Bloodforged Blade  (Rune)
+  ARTEFACT_2H_CLEAVER_HELL:        12,   // Demon Blade        (Soul)
+  ARTEFACT_2H_DUALSCIMITAR_UNDEAD:  4,   // Cursed Blades      (Rune)
+  ARTEFACT_2H_CLAYMORE_AVALON:     60,   // Remnants           (Avalonian)
+  ARTEFACT_MAIN_SWORD_CRYSTAL:     60,   // Infinite Crystal   (Crystal)
+  ARTEFACT_ARMOR_PLATE_UNDEAD:      4,   // Ancient Chain Rings(Rune)
+  ARTEFACT_ARMOR_PLATE_HELL:       12,   // Demonic Plates     (Soul)
+  ARTEFACT_ARMOR_PLATE_MORGANA:    28,   // Preserved Animal Fur(Relic)
+  ARTEFACT_ARMOR_PLATE_CRYSTAL:    28,   // Veilweaver Carapace(Relic)
+  ARTEFACT_ARMOR_PLATE_AVALON:     60,   // Exalted Plating    (Avalonian)
+  ARTEFACT_HEAD_PLATE_UNDEAD:       4,
+  ARTEFACT_HEAD_PLATE_HELL:        12,
+  ARTEFACT_HEAD_PLATE_MORGANA:     28,
+  ARTEFACT_HEAD_PLATE_CRYSTAL:     28,
+  ARTEFACT_HEAD_PLATE_AVALON:      60,
+  ARTEFACT_SHOES_PLATE_UNDEAD:      4,
+  ARTEFACT_SHOES_PLATE_HELL:       12,
+  ARTEFACT_SHOES_PLATE_MORGANA:    28,
+  ARTEFACT_SHOES_PLATE_CRYSTAL:    28,
+  ARTEFACT_SHOES_PLATE_AVALON:     60,
+};
+
+function getItemValue(item, tier, enchant) {
+  const base        = 16 * Math.pow(2, tier + enchant - 4);
+  const artifactMult = item.artifact ? (ARTIFACT_MULT[item.artifact] || 0) : 0;
+  const artifactVal  = artifactMult * Math.pow(2, tier - 4);
+  const numItems     = item.bars !== undefined ? item.bars : (item.hand === 1 ? 24 : 32);
+  return numItems * (base + artifactVal);
+}
 
 const RESOURCE_BASES = ["METALBAR","LEATHER","PLANKS"];
 
@@ -805,13 +897,17 @@ const RESOURCE_BASES = ["METALBAR","LEATHER","PLANKS"];
 // ═══════════════════════════════════════════════════
 
 let forgeSupabase = null;
+let _currentUserId = "default";
 
 const DEFAULT_SETTINGS = {
   city: "Brecilien",
   taxRate: 6.5,
   returnRate: 15,
   lymhurstBonus: 24.8,
+  fortSterlingBonus: 24.8,
   stationFee: 500,
+  visibleTiers: [4,5,6,7,8],
+  visibleEnchants: [0,1,2,3,4],
 };
 
 let state = {
@@ -819,6 +915,8 @@ let state = {
   stock: {},         // itemId -> { qty, price }
   queue: [],         // [{ item, tier, enchant, qty }]
   checkedMats: {},   // itemId -> true (afgevinkt)
+  crafted: [],       // [{ itemId, tier, enchant, qty, profit, craftedAt, sold, soldPrice }]
+  totalProfit: 0,
 };
 
 let _prices      = {};   // itemId -> most recent price
@@ -837,6 +935,12 @@ function loadState() {
       state.stock        = parsed.stock || {};
       state.queue        = parsed.queue || [];
       state.checkedMats  = parsed.checkedMats || {};
+      state.crafted      = parsed.crafted || [];
+      state.totalProfit  = parsed.totalProfit || 0;
+      // migratie: items zonder stad ouder dan 2u → Fort Sterling
+      const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
+      state.crafted.forEach(c => { if (!c.city && c.craftedAt < twoHoursAgo) c.city = "Fort Sterling"; });
+      saveState();
     }
   } catch(e) {}
 }
@@ -877,9 +981,11 @@ function allItemIds() {
 // CALCULATIONS
 // ═══════════════════════════════════════════════════
 
-function getReturnRate() {
+function getReturnRate(item) {
   const city = state.settings.city;
-  return city === "Lymhurst" ? state.settings.lymhurstBonus : state.settings.returnRate;
+  if (city === "Lymhurst" && item?.hand)          return state.settings.lymhurstBonus;
+  if (city === "Fort Sterling" && item?.category === "plate" && item?.base?.startsWith("HEAD_PLATE")) return state.settings.fortSterlingBonus;
+  return state.settings.returnRate;
 }
 
 function effectiveCost(itemId, qty, priceMap) {
@@ -936,12 +1042,12 @@ function calculate(item, tier, enchant, priceMap) {
     else                nonReturnableCost += eff.cost;
   }
 
-  const rr          = getReturnRate() / 100;
+  const rr          = getReturnRate(item) / 100;
   const matCost     = nonReturnableCost + returnableCost * (1 - rr);
   const sellId      = swordId(item.base, tier, enchant);
   const sellPrice   = priceMap[sellId] || 0;
   const netSell     = sellPrice * (1 - state.settings.taxRate / 100);
-  const craftFee    = (NUTRITION[tier] || 225) * (state.settings.stationFee / 100);
+  const craftFee    = getItemValue(item, tier, enchant) * 0.1125 * (state.settings.stationFee / 100);
   const profit      = netSell - matCost - craftFee;
   const roi         = matCost > 0 ? (profit / matCost) * 100 : 0;
 
@@ -1054,6 +1160,7 @@ async function loadPricesAndRender() {
   if (status) status.textContent = "Ververst om " + new Date().toLocaleTimeString("nl-NL", { hour:"2-digit", minute:"2-digit" });
 
   renderMarket();
+  renderQueue();
   renderKoopAlerts();
   loadVolumeData();
 }
@@ -1073,12 +1180,46 @@ function money(v) {
   return Math.round(Number(v||0)).toLocaleString("nl-NL");
 }
 
+function renderFilterPills() {
+  const vt = state.settings.visibleTiers || [4,5,6,7,8];
+  const ve = state.settings.visibleEnchants || [0,1,2,3,4];
+  const tp = document.getElementById("tierPills");
+  const ep = document.getElementById("enchantPills");
+  if (tp) tp.innerHTML = [4,5,6,7,8].map(t =>
+    `<span class="filter-pill${vt.includes(t)?" active":""}" onclick="toggleTier(${t})">T${t}</span>`
+  ).join("");
+  if (ep) ep.innerHTML = [0,1,2,3,4].map(e =>
+    `<span class="filter-pill${ve.includes(e)?" active":""}" onclick="toggleEnchant(${e})">.${e}</span>`
+  ).join("");
+}
+
+function toggleTier(t) {
+  let vt = [...(state.settings.visibleTiers || [4,5,6,7,8])];
+  if (vt.includes(t)) { if (vt.length > 1) vt = vt.filter(x => x !== t); }
+  else vt.push(t);
+  state.settings.visibleTiers = vt;
+  saveState();
+  renderFilterPills();
+  renderMarket();
+}
+
+function toggleEnchant(e) {
+  let ve = [...(state.settings.visibleEnchants || [0,1,2,3,4])];
+  if (ve.includes(e)) { if (ve.length > 1) ve = ve.filter(x => x !== e); }
+  else ve.push(e);
+  state.settings.visibleEnchants = ve;
+  saveState();
+  renderFilterPills();
+  renderMarket();
+}
+
 function renderMarket() {
-  const maxE = parseInt(document.getElementById("maxEnchantFilter")?.value ?? 4);
+  const vt = state.settings.visibleTiers    || [4,5,6,7,8];
+  const ve = state.settings.visibleEnchants || [0,1,2,3,4];
   const results = [];
   for (const item of ITEMS)
-    for (const t of TIERS)
-      for (const e of ENCHANTS.filter(e => e <= maxE))
+    for (const t of TIERS.filter(t => vt.includes(t)))
+      for (const e of ENCHANTS.filter(e => ve.includes(e)))
         results.push(calculate(item, t, e, _prices));
 
   results.sort((a,b) => {
@@ -1095,23 +1236,33 @@ function renderMarket() {
 
   // Laad/schoon dismissed kaartjes op
   const now = Date.now();
-  const dismissed = JSON.parse(localStorage.getItem("dismissed_cards") || "{}");
+  const dismissed = JSON.parse(localStorage.getItem(dismissedKey()) || "{}");
   for (const k of Object.keys(dismissed)) {
-    if (now - dismissed[k] > 86400000) delete dismissed[k];
+    if (now - dismissed[k] > 432000000) delete dismissed[k];
   }
-  localStorage.setItem("dismissed_cards", JSON.stringify(dismissed));
+  localStorage.setItem(dismissedKey(), JSON.stringify(dismissed));
 
-  const visibleCards = results.filter(r => !dismissed[`${r.item.id}_${r.tier}_${r.enchant}`]);
+  const craftedSet = new Set(state.crafted.filter(c => !c.sold).map(c => `${c.itemId}_${c.tier}_${c.enchant}`));
+  const visibleCards = results.filter(r => !dismissed[`${r.item.id}_${r.tier}_${r.enchant}`] && !craftedSet.has(`${r.item.id}_${r.tier}_${r.enchant}`));
 
   cards.innerHTML = visibleCards.slice(0,12).map(r => {
     const ok  = !r.missing.length && r.netSell > 0;
     const key = `${r.item.id}_${r.tier}_${r.enchant}`;
+    const city = state.settings.city;
+    const hasBonus = (city === "Lymhurst" && r.item.hand) ||
+                     (city === "Fort Sterling" && r.item.category === "plate" && r.item.base?.startsWith("HEAD_PLATE"));
+    const bonusPct = hasBonus ? (city === "Lymhurst" ? state.settings.lymhurstBonus : state.settings.fortSterlingBonus) : 0;
+    const bonusTag = hasBonus ? `<span style="background:rgba(212,160,23,.15);color:#d4a017;font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;border:1px solid rgba(212,160,23,.3)">+${bonusPct}% ${city}</span>` : "";
     return `<div class="deal-card${ok?"":" missing"}" style="position:relative">
       <button onclick="event.stopPropagation();dismissCard('${key}')"
         style="position:absolute;top:6px;right:6px;z-index:10;background:rgba(22,27,34,0.8);border:none;color:#7d8590;font-size:14px;cursor:pointer;line-height:1;padding:4px 7px;border-radius:4px"
         title="Verberg 24u">✕</button>
       <div onclick='openDetail(${JSON.stringify({item:r.item.id,tier:r.tier,enchant:r.enchant})})' style="cursor:pointer;padding-top:4px">
-        <div class="deal-name">${r.item.name}</div>
+        <div class="deal-name" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          ${r.item.name}
+          <button onclick="event.stopPropagation();copyText('${r.item.name.replace(/'/g,"\\'")}')" title="Kopieer naam" style="background:linear-gradient(135deg,#d4a017,#a0720f);border:none;cursor:pointer;color:#1a1200;font-size:11px;font-weight:800;padding:2px 7px;border-radius:5px;box-shadow:0 2px 6px rgba(212,160,23,.35);line-height:1.4">⎘</button>
+          ${bonusTag}
+        </div>
         <div class="deal-tier">T${r.tier}.${r.enchant}</div>
         <div style="margin-bottom:8px"><span class="${scoreClass(r.score)}">${ok ? r.score : "—"}</span></div>
         <div class="deal-row"><span class="muted">Winst</span><span class="${r.profit>=0?"profit":"loss"}">${ok ? money(r.profit) : "N/A"}</span></div>
@@ -1121,7 +1272,9 @@ function renderMarket() {
     </div>`;
   }).join("");
 
-  rows.innerHTML = results.map(r => {
+  const rowSearch = (document.getElementById("dealRowSearch")?.value || "").toLowerCase();
+  const filteredRows = rowSearch ? results.filter(r => r.item.name.toLowerCase().includes(rowSearch)) : results;
+  rows.innerHTML = filteredRows.map(r => {
     const ok = !r.missing.length && r.netSell > 0;
     const st = r.missing.length ? `<span class="muted">Missing: ${r.missing.join(", ")}</span>`
              : r.profit > 0 ? '<span style="color:var(--green)">Craft</span>'
@@ -1145,10 +1298,18 @@ function renderMarket() {
 // RENDER: DETAIL MODAL
 // ═══════════════════════════════════════════════════
 
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => showToast("Gekopieerd: " + text));
+}
+
+function dismissedKey() {
+  return "dismissed_cards_" + _currentUserId;
+}
+
 function dismissCard(key) {
-  const dismissed = JSON.parse(localStorage.getItem("dismissed_cards") || "{}");
+  const dismissed = JSON.parse(localStorage.getItem(dismissedKey()) || "{}");
   dismissed[key] = Date.now();
-  localStorage.setItem("dismissed_cards", JSON.stringify(dismissed));
+  localStorage.setItem(dismissedKey(), JSON.stringify(dismissed));
   renderMarket();
 }
 
@@ -1158,7 +1319,7 @@ function openDetail(params) {
   _currentDetail = { item, tier: params.tier, enchant: params.enchant };
   const r = calculate(item, params.tier, params.enchant, _prices);
 
-  document.getElementById("modalTitle").textContent = `${item.name} — T${r.tier}.${r.enchant}`;
+  document.getElementById("modalTitle").innerHTML = `${item.name} <button onclick="copyText('${item.name.replace(/'/g,"\\'")}')" title="Kopieer naam" style="background:linear-gradient(135deg,#d4a017,#a0720f);border:none;cursor:pointer;color:#1a1200;font-size:13px;font-weight:800;padding:3px 9px;border-radius:6px;vertical-align:middle;box-shadow:0 2px 8px rgba(212,160,23,.4);transition:filter .15s" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter=''">⎘</button> <span style="font-weight:400;color:#7d8590">— T${r.tier}.${r.enchant}</span>`;
 
   let html = "";
   for (const ing of r.breakdown) {
@@ -1244,7 +1405,11 @@ function friendlyIngredientName(id) {
   if (id.includes("METALBAR")) return `Metal Bar T${tier}.${enchant}`;
   if (id.includes("LEATHER"))  return `Leather T${tier}.${enchant}`;
   if (id.includes("PLANKS"))   return `Planks T${tier}.${enchant}`;
-  if (id.includes("ARTIFACT")) return `Artifact T${tier}`;
+  if (id.includes("ARTEFACT")) {
+    const base = id.replace(/^T\d+_/, "");
+    const match = ITEMS.find(i => i.artifact === base);
+    return match ? `${match.artifactName} T${tier}` : `Artifact T${tier}`;
+  }
   return id;
 }
 
@@ -1440,8 +1605,9 @@ function renderQueue() {
           ${profitHtml}
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px">
         <input class="mini" type="number" min="1" value="${q.qty}" onchange="updateQueueQty(${i},this.value)" style="width:60px" ${checked?"disabled":""}>
+        <button onclick="markCrafted(${i})" title="Verplaats naar Verkopen" style="background:#238636;border:none;color:#fff;font-size:12px;cursor:pointer;padding:5px 10px;border-radius:5px;white-space:nowrap">✓ Gecraftd</button>
         <button class="queue-remove" onclick="removeFromQueue(${i})">✕</button>
       </div>
     </div>`;
@@ -1480,7 +1646,7 @@ function renderQueue() {
       const t = matType(m.id);
       const checked = !!state.checkedMats[m.id];
       if (t !== lastType) {
-        html += `<tr><td colspan="4" style="padding:10px 0 4px;font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--gold,#d4a017);text-transform:uppercase;border-bottom:1px solid #21262d">${matLabel(t)}</td></tr>`;
+        html += `<tr><td colspan="5" style="padding:10px 0 4px;font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--gold,#d4a017);text-transform:uppercase;border-bottom:1px solid #21262d">${matLabel(t)}</td></tr>`;
         lastType = t;
         lastChecked = -1;
       }
@@ -1490,11 +1656,16 @@ function renderQueue() {
       const need = Math.max(0, effectiveQty - (stock.qty || 0));
       const rowStyle = checked ? "opacity:.4;text-decoration:line-through;cursor:pointer" : "cursor:pointer";
       const icon = checked ? "✓ " : "";
+      const isArtifact = m.id.includes("ARTEFACT");
+      const copyBtn = isArtifact ? ` <button onclick="event.stopPropagation();copyText('${friendlyIngredientName(m.id)}')" style="background:linear-gradient(135deg,#d4a017,#a0720f);border:none;cursor:pointer;color:#1a1200;font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px;box-shadow:0 1px 4px rgba(212,160,23,.35);line-height:1.5;vertical-align:middle">⎘</button>` : "";
+      const unitPrice = _prices[m.id] || 0;
+      const totalPrice = unitPrice * need;
       html += `<tr style="${rowStyle}" onclick="toggleMatChecked('${m.id}')">
-        <td>${icon}${friendlyIngredientName(m.id)}</td>
+        <td>${icon}${friendlyIngredientName(m.id)}${copyBtn}</td>
         <td>${m.qty.toLocaleString()} <small class="muted">→ ${effectiveQty}</small></td>
         <td>${(stock.qty||0).toLocaleString()}</td>
         <td class="${!checked && need>0?"loss":""}">${need > 0 ? need.toLocaleString() : "✓"}</td>
+        <td class="muted" style="font-size:12px">${unitPrice ? money(unitPrice) : "—"}</td>
       </tr>`;
     }
     matTbl.innerHTML = html;
@@ -1530,13 +1701,159 @@ function removeFromQueue(index) {
 }
 
 // ═══════════════════════════════════════════════════
+// VERKOPEN
+// ═══════════════════════════════════════════════════
+
+function markCrafted(index) {
+  const q = state.queue[index];
+  if (!q) return;
+  const item = ITEMS.find(it => it.id === q.itemId);
+  const r = item ? calculate(item, q.tier, q.enchant, _prices) : null;
+  state.crafted.push({
+    itemId: q.itemId,
+    tier: q.tier,
+    enchant: q.enchant,
+    qty: q.qty,
+    profit: r ? r.netSell * q.qty : 0,
+    craftedAt: Date.now(),
+    city: state.settings.city,
+    sold: false,
+    soldQty: 0,
+    soldPrice: 0,
+  });
+  state.queue.splice(index, 1);
+  saveState();
+  renderQueue();
+  renderVerkopen();
+  renderMarket();
+  updateQueueBadge();
+  showToast("Verplaatst naar Verkopen");
+}
+
+function setCraftedCity(index, city) {
+  if (!state.crafted[index]) return;
+  state.crafted[index].city = city;
+  saveState();
+  renderVerkopen();
+}
+
+function markSold(index) {
+  const c = state.crafted[index];
+  if (!c) return;
+  const remaining = c.qty - (c.soldQty || 0);
+  state.totalProfit += (c.profit / c.qty) * remaining;
+  state.crafted.splice(index, 1);
+  saveState();
+  renderVerkopen();
+  renderMarket();
+}
+
+function sellOne(index) {
+  const c = state.crafted[index];
+  if (!c) return;
+  state.totalProfit += c.profit / c.qty;
+  c.soldQty = (c.soldQty || 0) + 1;
+  if (c.soldQty >= c.qty) {
+    state.crafted.splice(index, 1);
+    renderMarket();
+  }
+  saveState();
+  renderVerkopen();
+}
+
+function removeFromVerkopen(index) {
+  state.crafted.splice(index, 1);
+  saveState();
+  renderVerkopen();
+  renderMarket();
+}
+
+function renderVerkopen() {
+  const list  = document.getElementById("verkopenList");
+  const empty = document.getElementById("verkopenEmpty");
+  const totaalEl = document.getElementById("verkopenTotaal");
+  if (!list) return;
+
+  // steden dropdown vullen
+  const citySel = document.getElementById("verkopenCityFilter");
+  if (citySel && citySel.options.length === 1) {
+    CITIES.forEach(c => { const o = document.createElement("option"); o.value = c; o.textContent = c; citySel.appendChild(o); });
+  }
+  const cityFilter = citySel?.value || "";
+  const search = (document.getElementById("verkopenSearch")?.value || "").toLowerCase();
+
+  const visible = state.crafted.filter(c => {
+    if (cityFilter && (c.city || state.settings.city) !== cityFilter) return false;
+    if (search) {
+      const item = ITEMS.find(it => it.id === c.itemId);
+      if (!(item?.name || c.itemId).toLowerCase().includes(search)) return false;
+    }
+    return true;
+  });
+  const open = visible;
+  const sold = [];
+
+  if (!state.crafted.length) {
+    list.innerHTML = "";
+    if (empty) empty.style.display = "";
+    if (totaalEl) totaalEl.style.display = "none";
+    return;
+  }
+  if (empty) empty.style.display = visible.length ? "none" : "";
+  if (totaalEl) totaalEl.style.display = visible.length ? "" : "none";
+
+  const fmt = ts => new Date(ts).toLocaleDateString("nl-NL", { day:"2-digit", month:"2-digit" });
+
+  list.innerHTML = visible.map((c, i) => {
+    const i_real = state.crafted.indexOf(c);
+    const item = ITEMS.find(it => it.id === c.itemId);
+    const name = item?.name || c.itemId;
+    const rowStyle = "";
+    const soldQty = c.soldQty || 0;
+    const tag = soldQty > 0
+      ? `<span style="background:#e3b34122;color:#e3b341;font-size:11px;padding:2px 8px;border-radius:10px">${soldQty}/${c.qty} verkocht</span>`
+      : `<span style="background:#23863622;color:#3fb950;font-size:11px;padding:2px 8px;border-radius:10px">Te verkopen</span>`;
+    const soldRow = `<div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+           <button onclick="sellOne(${i_real})" style="background:#388bfd22;border:1px solid #388bfd;color:#58a6ff;font-size:12px;cursor:pointer;padding:5px 10px;border-radius:5px">− 1 verkocht</button>
+           <button onclick="markSold(${i_real})" style="background:#1f6feb;border:none;color:#fff;font-size:12px;cursor:pointer;padding:5px 10px;border-radius:5px">Alles verkocht</button>
+         </div>`;
+    return `<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border);${rowStyle}">
+      <div>
+        <div style="font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px">${name} ${tag}</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:2px">T${c.tier}.${c.enchant} &nbsp;·&nbsp; ${c.qty}× &nbsp;·&nbsp; ${fmt(c.craftedAt)} &nbsp;·&nbsp; <span id="vtimer_${i_real}" style="color:#e3b341">⏱ ${formatElapsed(c.craftedAt)}</span></div>
+<div style="font-size:12px;color:#3fb950;margin-top:4px">Verwachte winst: <b>${money(c.profit)}</b></div>
+        ${soldRow}
+      </div>
+      <button onclick="removeFromVerkopen(${i_real})" title="Verwijder" style="background:none;border:none;color:#7d8590;cursor:pointer;font-size:16px;padding:0 4px">✕</button>
+    </div>`;
+  }).join("");
+
+  const expectedTotal = open.reduce((s, c) => s + c.profit, 0);
+  const realizedTotal = sold.reduce((s, c) => s + (c.soldPrice * c.qty - (c.profit / (c.qty||1) * c.qty - c.profit) - 0), 0);
+  const realizedActual = sold.reduce((s, c) => s + c.soldPrice, 0);
+  document.getElementById("verkopenExpected").textContent = money(expectedTotal);
+  document.getElementById("verkopenRealized").textContent = money(realizedActual);
+  const tpEl = document.getElementById("totalProfitDisplay");
+  if (tpEl) tpEl.textContent = money(state.totalProfit || 0);
+
+  clearInterval(_verkopenTimer);
+  _verkopenTimer = setInterval(() => {
+    state.crafted.forEach((c, i) => {
+      const el = document.getElementById(`vtimer_${i}`);
+      if (el) el.textContent = "⏱ " + formatElapsed(c.craftedAt);
+    });
+  }, 60000);
+}
+
+// ═══════════════════════════════════════════════════
 // SETTINGS
 // ═══════════════════════════════════════════════════
 
 function renderSettings() {
   document.getElementById("setTax").value      = state.settings.taxRate;
   document.getElementById("setReturn").value   = state.settings.returnRate;
-  document.getElementById("setLymhurst").value = state.settings.lymhurstBonus;
+  document.getElementById("setLymhurst").value     = state.settings.lymhurstBonus;
+  document.getElementById("setFortSterling").value = state.settings.fortSterlingBonus;
   document.getElementById("setStation").value  = state.settings.stationFee;
 
   const mc = document.getElementById("marketCity");
@@ -1548,7 +1865,8 @@ function renderSettings() {
 function saveSettings() {
   state.settings.taxRate       = parseFloat(document.getElementById("setTax").value)      || 6.5;
   state.settings.returnRate    = parseFloat(document.getElementById("setReturn").value)   || 15;
-  state.settings.lymhurstBonus = parseFloat(document.getElementById("setLymhurst").value) || 24.8;
+  state.settings.lymhurstBonus     = parseFloat(document.getElementById("setLymhurst").value)     || 24.8;
+  state.settings.fortSterlingBonus = parseFloat(document.getElementById("setFortSterling").value) || 24.8;
   state.settings.stationFee    = parseFloat(document.getElementById("setStation").value)  || 500;
   saveState();
   showToast("Instellingen opgeslagen");
@@ -1577,6 +1895,19 @@ function showPage(id, btn) {
 // ═══════════════════════════════════════════════════
 
 let _toastTimer = null;
+let _verkopenTimer = null;
+
+function formatElapsed(ts) {
+  const mins = Math.floor((Date.now() - ts) / 60000);
+  if (mins < 1)   return "Zojuist";
+  if (mins < 60)  return `${mins}m geleden`;
+  const hrs = Math.floor(mins / 60);
+  const rem = mins % 60;
+  if (hrs < 24)   return rem ? `${hrs}u ${rem}m` : `${hrs}u`;
+  const days = Math.floor(hrs / 24);
+  const remH = hrs % 24;
+  return remH ? `${days}d ${remH}u` : `${days}d`;
+}
 function showToast(msg) {
   const t = document.getElementById("toast");
   if (!t) return;
@@ -1651,12 +1982,15 @@ async function signOutUser() {
 }
 
 function initApp(session) {
+  _currentUserId = session?.user?.id || "default";
   setUserLabel(session?.user?.email || "");
   showAuthScreen(false);
   loadState();
   renderSettings();
+  renderFilterPills();
   renderStock();
   renderQueue();
+  renderVerkopen();
   loadPricesAndRender();
 }
 
